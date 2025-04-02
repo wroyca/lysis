@@ -98,7 +98,4 @@ bpkg.bindist.archive:--archive-type=tar.xz
 bpkg.bindist.archive:--archive-no-cpu
 
 +bpkg.bindist.archive.post:build/bindist-wasm-archive-post.bx
-
-bpkg.bindist.archive:config.cxx=../emsdk/upstream/emscripten/em++
-bpkg.bindist.archive:config.cc=../emsdk/upstream/emscripten/emcc
 \
