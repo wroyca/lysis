@@ -1,1 +1,3 @@
 ./: {*/ -build/} doc{README.md} legal{LICENSE.md} manifest
+
+./: build/file{bindist-wasm-archive-post.bx}
