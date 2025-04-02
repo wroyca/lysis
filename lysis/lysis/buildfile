@@ -4,3 +4,6 @@ libs =
 exe{lysis}: {hxx ixx txx cxx}{**} $libs testscript
 
 cxx.poptions =+ "-I$out_root" "-I$src_root"
+
+if ($cxx.id == 'clang-emscripten')
+  cxx.poptions += "-s" "EXPORT_ES6=1" "-s" "MODULARIZE=1"
