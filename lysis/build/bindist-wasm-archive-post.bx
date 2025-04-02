@@ -7,8 +7,9 @@ info = [cmdline] echo 1>&2
 archive_path = [path] $1
 
 if $empty($archive_path)
+{
   exit "Archive path is not specified"
-end
+}
 
 # Extract the top directory name from the archive path
 #
@@ -18,8 +19,9 @@ pkg_name = [dir_path] $regex.match(                                    \
   return_subs)
 
 if $null($pkg_name)
+{
   exit "unable to extract top directory name from archive path '$archive_path'"
-end
+}
 
 # Define Emscripten SDK version to download
 #
