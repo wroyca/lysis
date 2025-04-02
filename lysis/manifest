@@ -18,8 +18,7 @@ builds: none
 # Binary distributions packages.
 #
 bindist-debian-builds: bindist
-bindist-debian-build-include: linux_debian*-**
-bindist-debian-build-include: wasm32-emscripten
+bindist-debian-build-include: linux_debian*-**-
 bindist-debian-build-exclude: **
 bindist-debian-build-config:
 \
@@ -88,17 +87,18 @@ b.create:config.cc.coptions="/W2 /O2"
 # WebAssembly distributions archives (for Emscripten).
 #
 bindist-wasm-builds: bindist
-bindist-wasm-build-include: *-emcc_*
+bindist-wasm-build-include: linux_debian_11-gcc_10.2-bindist
 bindist-wasm-build-exclude: **
 bindist-wasm-build-config:
 \
 +bpkg.bindist.archive:
 +bbot.bindist.upload:
-
 bpkg.bindist.archive:--recursive=auto
+bpkg.bindist.archive:--archive-type=tar.xz
+bpkg.bindist.archive:--archive-no-cpu
 
-bpkg.create:config.bin.lib=static
-bpkg.create:config.cc.poptions=[null]
-bpkg.create:config.cc.coptions=[null]
-bpkg.create:config.cc.loptions=[null]
++bpkg.bindist.archive.post:build/bindist-wasm-archive-post.bx
+
+bpkg.bindist.archive:config.cxx=../emsdk/upstream/emscripten/em++
+bpkg.bindist.archive:config.cc=../emsdk/upstream/emscripten/emcc
 \

@@ -1,0 +1,68 @@
+# Overlay the distribution archive with Emscripten SDK for WebAssembly compilation
+#
+# Usage: $0 <archive-path>
+
+info = [cmdline] echo 1>&2
+
+archive_path = [path] $1
+
+if $empty($archive_path)
+  exit "Archive path is not specified"
+end
+
+# Extract the top directory name from the archive path
+#
+pkg_name = [dir_path] $regex.match(                                    \
+  $archive_path,                                                       \
+  '.+[/\\]([^/\\]+-x86_64-[^/\\]+)\.(?:zip|tar\.[^./\\]+)',            \
+  return_subs)
+
+if $null($pkg_name)
+  exit "unable to extract top directory name from archive path '$archive_path'"
+end
+
+# Define Emscripten SDK version to download
+#
+emsdk_version = "4.0.6"
+emsdk_url = "https://github.com/emscripten-core/emsdk/archive/refs/tags/$emsdk_version.tar.gz"
+
+$info "fetching Emscripten SDK $emsdk_version"
+
+# Download Emscripten SDK
+#
+curl -sSL -o emsdk.tar.gz $emsdk_url
+
+# Extract the original archive
+#
+bsdtar -xf $archive_path
+
+# Set up Emscripten SDK
+#
+mkdir $pkg_name/emsdk
+bsdtar -xf emsdk.tar.gz -C $pkg_name/emsdk --strip-components=1
+rm emsdk.tar.gz
+
+# Install and activate specific Emscripten version
+#
+cd $pkg_name/emsdk
+./emsdk install $emsdk_version
+./emsdk activate $emsdk_version
+cd ../..
+
+# Create helper scripts for using Emscripten
+#
+cat > $pkg_name/build-wasm.sh << EOF
+#!/bin/sh
+# Helper script to build WebAssembly with the bundled Emscripten
+#
+source ./emsdk/emsdk_env.sh
+echo "Emscripten environment activated. Use emcc/em++ to compile."
+EOF
+
+chmod +x $pkg_name/build-wasm.sh
+
+# Recreate the archive with the new content
+#
+rm $archive_path
+bsdtar -a --options=compression-level=9 -cf $archive_path $string($pkg_name)
+rm -r $pkg_name
