@@ -11,11 +11,15 @@ email: wroy@proton.me
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0
 
-# ...
+# FIXME: node it not installing on debian. Restrict to linux_fedora_41
+# for now.
 #
-builds: default
-build-include: **emcc**
-default-build-config:
+builds: none
+
+fedora-builds: sys
+fedora-build-include: linux_fedora_41-**
+fedora-build-exclude: **
+fedora-build-config:
 \
-sys:nodejs/*
+sys:nodejs
 \
