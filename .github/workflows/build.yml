@@ -23,8 +23,6 @@ jobs:
   setup-build2:
     name: Setup build2
     uses: ./.github/workflows/setup-build2.yml
-    with:
-      build2-version: '0.18.0-a.0'
 
   build:
     name: Build liblysis on ${{ matrix.os }}
@@ -52,29 +50,47 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
+      - name: Setup cache key inputs
+        id: cache-key
+        shell: bash
+        run: |
+          echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
       - name: Restore build2 from cache
         id: cache-build2
         uses: actions/cache@v3
         with:
           path: ~/build2
-          key: build2-0.18.0-a.0-${{ runner.os == 'Linux' && 'linux' || runner.os == 'macOS' && 'macos' || 'windows' }}-${{ github.run_id }}
+          key: build2-${{ env.BUILD2_VERSION }}-${{ runner.os == 'Linux' && 'linux' || runner.os == 'macOS' && 'macos' || 'windows' }}-${{ steps.cache-key.outputs.date }}
           restore-keys: |
-            build2-0.18.0-a.0-${{ runner.os == 'Linux' && 'linux' || runner.os == 'macOS' && 'macos' || 'windows' }}-
+            build2-${{ env.BUILD2_VERSION }}-${{ runner.os == 'Linux' && 'linux' || runner.os == 'macOS' && 'macos' || 'windows' }}-
 
       - name: Setup PATH (Linux/macOS)
         if: runner.os == 'Linux' || runner.os == 'macOS'
         shell: bash
-        run: echo "$HOME/build2/bin" >> $GITHUB_PATH
+        run: |
+          echo "$HOME/build2/bin" >> $GITHUB_PATH
+          ls -la $HOME/build2/bin || echo "build2 directory structure issue"
 
       - name: Setup PATH (Windows)
         if: runner.os == 'Windows'
         shell: cmd
-        run: echo "%USERPROFILE%\build2\bin" >> %GITHUB_PATH%
+        run: |
+          echo "%USERPROFILE%\build2\bin" >> %GITHUB_PATH%
+          dir "%USERPROFILE%\build2\bin" || echo "build2 directory structure issue"
+
+      - name: Verify build2 availability
+        shell: bash
+        run: |
+          export PATH="$PATH:$HOME/build2/bin"
+          which bpkg || echo "bpkg not found in PATH"
+          bpkg --version || echo "bpkg command failed"
 
       - name: Create build directory
         if: runner.os != 'Windows'
         shell: bash
         run: |
+          export PATH="$PATH:$HOME/build2/bin"
           mkdir -p /tmp/liblysis-build
           cd /tmp/liblysis-build
 
@@ -82,6 +98,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
           mkdir C:\tmp
           cd C:\tmp
 
@@ -89,20 +106,23 @@ jobs:
         if: runner.os == 'Linux' || runner.os == 'macOS'
         shell: bash
         run: |
+          export PATH="$PATH:$HOME/build2/bin"
           cd /tmp/liblysis-build
-          bpkg -V create -d build cc config.cxx=c++ config.cc.coptions=-Wall
+          bpkg -V create -d build cc config.cxx=c++ config.cc.coptions=-Wall config.install.root=/tmp/liblysis-build/build/install
 
       - name: Create build configuration (Windows)
         if: runner.os == 'Windows'
         shell: cmd
         run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
           cd C:\tmp
-          bpkg -V create -d build cc "config.c=clang -m64" "config.cxx=clang++ -m64" config.cc.coptions=-w config.cc.loptions=/IGNORE:4042 config.cc.aoptions=/IGNORE:4221
+          bpkg -V create -d build cc "config.c=clang -m64" "config.cxx=clang++ -m64" config.cc.coptions=-w config.cc.loptions=/IGNORE:4042 config.cc.aoptions=/IGNORE:4221 config.install.root=C:\tmp\build\install
 
       - name: Add package repository (Linux/macOS)
         if: runner.os == 'Linux' || runner.os == 'macOS'
         shell: bash
         run: |
+          export PATH="$PATH:$HOME/build2/bin"
           cd /tmp/liblysis-build
           bpkg -v add -d build $GITHUB_WORKSPACE#$GITHUB_SHA
 
@@ -110,6 +130,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
           cd C:\tmp
           bpkg -v add -d build %GITHUB_WORKSPACE%#%GITHUB_SHA%
 
@@ -117,34 +138,41 @@ jobs:
         if: runner.os == 'Linux' || runner.os == 'macOS'
         shell: bash
         run: |
+          export PATH="$PATH:$HOME/build2/bin"
           cd /tmp/liblysis-build
-          bpkg -v fetch -d build
+          bpkg -v fetch -d build --fetch-timeout=60
 
       - name: Fetch package (Windows)
         if: runner.os == 'Windows'
         shell: cmd
         run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
           cd C:\tmp
-          bpkg -v fetch -d build
+          bpkg -v fetch -d build --fetch-timeout=60
 
       - name: Build and configure package (Linux/macOS)
         if: runner.os == 'Linux' || runner.os == 'macOS'
         shell: bash
         run: |
+          export PATH="$PATH:$HOME/build2/bin"
           cd /tmp/liblysis-build
-          bpkg -v build -d build --yes "config.liblysis.develop=false" liblysis
+          bpkg -v build -d build --configure-only --yes -- liblysis
+          bpkg -v build -d build --yes liblysis
 
       - name: Build and configure package (Windows)
         if: runner.os == 'Windows'
         shell: cmd
         run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
           cd C:\tmp
-          bpkg -v build -d build --yes "config.liblysis.develop=false" liblysis
+          bpkg -v build -d build --configure-only --yes -- liblysis
+          bpkg -v build -d build --yes liblysis
 
       - name: Run tests (Linux/macOS)
         if: runner.os == 'Linux' || runner.os == 'macOS'
         shell: bash
         run: |
+          export PATH="$PATH:$HOME/build2/bin"
           cd /tmp/liblysis-build
           bpkg -v test -d build liblysis
 
@@ -152,6 +180,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
           cd C:\tmp
           bpkg -v test -d build liblysis
 
@@ -159,23 +188,29 @@ jobs:
         if: runner.os == 'Linux' || runner.os == 'macOS'
         shell: bash
         run: |
+          export PATH="$PATH:$HOME/build2/bin"
           cd /tmp/liblysis-build
-          bpkg -v install -d build liblysis
+          cd build
+          b -v install config.install.root=/tmp/liblysis-build/build/install
 
       - name: Install package (Windows)
         if: runner.os == 'Windows'
         shell: cmd
         run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
           cd C:\tmp
-          bpkg -v install -d build liblysis
+          cd build
+          b -v install config.install.root=C:\tmp\build\install
 
       - name: Test installed package (Linux/macOS)
         if: runner.os == 'Linux' || runner.os == 'macOS'
         shell: bash
         run: |
+          export PATH="$PATH:$HOME/build2/bin"
           cd /tmp/liblysis-build
           mkdir -p build-installed
           cd build-installed
+          b create . config.cxx=c++ config.cc.coptions=-Wall
           b configure $GITHUB_WORKSPACE/liblysis/tests/ config.cc.poptions=-I/tmp/liblysis-build/build/install/include config.cc.loptions=-L/tmp/liblysis-build/build/install/lib
           b test
 
@@ -183,8 +218,10 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
           cd C:\tmp
           mkdir build-installed
           cd build-installed
+          b create . "config.c=clang -m64" "config.cxx=clang++ -m64" config.cc.coptions=-w
           b configure %GITHUB_WORKSPACE%\liblysis\tests\ config.cc.poptions=-IC:\tmp\build\install\include config.cc.loptions=-LC:\tmp\build\install\lib
           b test

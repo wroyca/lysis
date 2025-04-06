@@ -68,3 +68,25 @@ jobs:
           curl --connect-timeout 10 --retry 5 --retry-all-errors -O https://stage.build2.org/0/0.18.0-a.0/build2-install-msvc-0.18.0-a.0-stage.bat
 
           build2-install-msvc-0.18.0-a.0-stage.bat --local --yes %USERPROFILE%\build2
+
+      - name: Setup PATH (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          echo "$HOME/build2/bin" >> $GITHUB_PATH
+          # Verify installation
+          ls -la $HOME/build2/bin || echo "build2 directory structure issue"
+
+      - name: Setup PATH (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          echo "%USERPROFILE%\build2\bin" >> %GITHUB_PATH%
+          dir "%USERPROFILE%\build2\bin" || echo "build2 directory structure issue"
+
+      - name: Verify build2 installation
+        shell: bash
+        run: |
+          which b || echo "b not found in PATH"
+          which bpkg || echo "bpkg not found in PATH"
+          echo "PATH=$PATH"
