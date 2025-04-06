@@ -1,0 +1,6 @@
+$out_root/
+{
+  include liblysis/
+}
+
+export $out_root/liblysis/$import.target

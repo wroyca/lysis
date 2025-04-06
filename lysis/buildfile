@@ -1,1 +1,9 @@
-./: {*/ -build/} doc{README.md} legal{LICENSE.md} manifest
+./: {*/ -build/ -node_modules/ -out/} json{package tsconfig} doc{README.md} legal{LICENSE.md} manifest
+
+# Node.js package metadata and dependencies.
+#
+json{package}: in{package} manifest
+
+# TypeScript sources and compiler configuration.
+#
+json{tsconfig}: in{tsconfig}

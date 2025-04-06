@@ -1,21 +1,14 @@
 : 1
-name: lysis
+name: liblysis
 version: 0.1.0-a.0.z
 language: c++
-summary: lysis C++ executable
+project: lysis
+summary: lysis C++ library
 license: GPL-3.0-or-later ; GNU General Public License v3.0 or later.
 description-file: README.md
 url: https://github.com/wroyca/lysis
 email: wroy@proton.me
-# build-error-email: wroy@proton.me
+#build-error-email: wroy@proton.me
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0
-
-# ...
-#
-builds: default
-build-include: **emcc**
-default-build-config:
-\
-sys:node
-\
+#depends: libhello ^1.0.0
