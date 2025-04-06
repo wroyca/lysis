@@ -1,0 +1,70 @@
+name: Setup build2 Toolchain
+
+on:
+  workflow_call:
+    inputs:
+      build2-version:
+        description: 'Build2 version to download and build'
+        default: '0.18.0-a.0'
+        required: false
+        type: string
+
+jobs:
+  setup-build2:
+    name: Setup build2 toolchain
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            build-os: "linux"
+          - os: windows-latest
+            build-os: "windows"
+          - os: macos-latest
+            build-os: "macos"
+
+    steps:
+      - name: Set up build environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup cache key inputs
+        id: cache-key
+        shell: bash
+        run: |
+          echo "build2-version=${{ inputs.build2-version }}" >> $GITHUB_OUTPUT
+          echo "os=${{ matrix.build-os }}" >> $GITHUB_OUTPUT
+          echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Restore cached build2
+        id: cache-build2
+        uses: actions/cache@v3
+        with:
+          path: ~/build2
+          key: build2-${{ steps.cache-key.outputs.build2-version }}-${{ steps.cache-key.outputs.os }}-${{ steps.cache-key.outputs.date }}
+          restore-keys: |
+            build2-${{ steps.cache-key.outputs.build2-version }}-${{ steps.cache-key.outputs.os }}-
+
+      - name: Download and build build2 (Linux/macOS)
+        if: steps.cache-build2.outputs.cache-hit != 'true' && (runner.os == 'Linux' || runner.os == 'macOS')
+        shell: bash
+        run: |
+          mkdir -p ~/build2-build
+          cd ~/build2-build
+          v=$(curl -sSf https://stage.build2.org/0/toolchain.sha256 | sed -n 's,^.*/build2-install-\(.*\)-stage\.sh$,\1,p')
+          curl --connect-timeout 10 --retry 5 --retry-all-errors -O \
+            "https://stage.build2.org/0/$v/build2-install-$v-stage.sh"
+          sh build2-install-$v-stage.sh --local --yes ~/build2
+
+      - name: Download and build build2 (Windows)
+        if: steps.cache-build2.outputs.cache-hit != 'true' && runner.os == 'Windows'
+        shell: cmd
+        run: |
+          mkdir %USERPROFILE%\build2-build
+          cd %USERPROFILE%\build2-build
+
+          curl --connect-timeout 10 --retry 5 --retry-all-errors -O https://stage.build2.org/0/0.18.0-a.0/build2-install-msvc-0.18.0-a.0-stage.bat
+
+          build2-install-msvc-0.18.0-a.0-stage.bat --local --yes %USERPROFILE%\build2

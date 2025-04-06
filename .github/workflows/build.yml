@@ -1,0 +1,190 @@
+name: Build and test liblysis
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '!.github/workflows/**'
+  pull_request:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '!.github/workflows/**'
+  workflow_dispatch:
+
+env:
+  BUILD2_VERSION: 0.18.0-a.0
+  LIBLYSIS_DEVELOP: false
+
+jobs:
+  setup-build2:
+    name: Setup build2
+    uses: ./.github/workflows/setup-build2.yml
+    with:
+      build2-version: '0.18.0-a.0'
+
+  build:
+    name: Build liblysis on ${{ matrix.os }}
+    needs: setup-build2
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            shell: bash
+          - os: windows-latest
+            shell: cmd
+          - os: macos-latest
+            shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Set up build environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Restore build2 from cache
+        id: cache-build2
+        uses: actions/cache@v3
+        with:
+          path: ~/build2
+          key: build2-0.18.0-a.0-${{ runner.os == 'Linux' && 'linux' || runner.os == 'macOS' && 'macos' || 'windows' }}-${{ github.run_id }}
+          restore-keys: |
+            build2-0.18.0-a.0-${{ runner.os == 'Linux' && 'linux' || runner.os == 'macOS' && 'macos' || 'windows' }}-
+
+      - name: Setup PATH (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: echo "$HOME/build2/bin" >> $GITHUB_PATH
+
+      - name: Setup PATH (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: echo "%USERPROFILE%\build2\bin" >> %GITHUB_PATH%
+
+      - name: Create build directory
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p /tmp/liblysis-build
+          cd /tmp/liblysis-build
+
+      - name: Create build directory (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          mkdir C:\tmp
+          cd C:\tmp
+
+      - name: Create build configuration (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          cd /tmp/liblysis-build
+          bpkg -V create -d build cc config.cxx=c++ config.cc.coptions=-Wall
+
+      - name: Create build configuration (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cd C:\tmp
+          bpkg -V create -d build cc "config.c=clang -m64" "config.cxx=clang++ -m64" config.cc.coptions=-w config.cc.loptions=/IGNORE:4042 config.cc.aoptions=/IGNORE:4221
+
+      - name: Add package repository (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          cd /tmp/liblysis-build
+          bpkg -v add -d build $GITHUB_WORKSPACE#$GITHUB_SHA
+
+      - name: Add package repository (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cd C:\tmp
+          bpkg -v add -d build %GITHUB_WORKSPACE%#%GITHUB_SHA%
+
+      - name: Fetch package (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          cd /tmp/liblysis-build
+          bpkg -v fetch -d build
+
+      - name: Fetch package (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cd C:\tmp
+          bpkg -v fetch -d build
+
+      - name: Build and configure package (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          cd /tmp/liblysis-build
+          bpkg -v build -d build --yes "config.liblysis.develop=false" liblysis
+
+      - name: Build and configure package (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cd C:\tmp
+          bpkg -v build -d build --yes "config.liblysis.develop=false" liblysis
+
+      - name: Run tests (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          cd /tmp/liblysis-build
+          bpkg -v test -d build liblysis
+
+      - name: Run tests (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cd C:\tmp
+          bpkg -v test -d build liblysis
+
+      - name: Install package (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          cd /tmp/liblysis-build
+          bpkg -v install -d build liblysis
+
+      - name: Install package (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cd C:\tmp
+          bpkg -v install -d build liblysis
+
+      - name: Test installed package (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          cd /tmp/liblysis-build
+          mkdir -p build-installed
+          cd build-installed
+          b configure $GITHUB_WORKSPACE/liblysis/tests/ config.cc.poptions=-I/tmp/liblysis-build/build/install/include config.cc.loptions=-L/tmp/liblysis-build/build/install/lib
+          b test
+
+      - name: Test installed package (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cd C:\tmp
+          mkdir build-installed
+          cd build-installed
+          b configure %GITHUB_WORKSPACE%\liblysis\tests\ config.cc.poptions=-IC:\tmp\build\install\include config.cc.loptions=-LC:\tmp\build\install\lib
+          b test
