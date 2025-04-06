@@ -17,5 +17,5 @@ builds: default
 build-include: **emcc**
 default-build-config:
 \
-sys:node
+sys:nodejs
 \
