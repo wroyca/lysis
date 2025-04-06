@@ -27,3 +27,17 @@
 # Compilation database.
 #
 compile_commands.json
+
+# Node.js packages.
+#
+node_modules/
+
+# Build artifacts.
+#
+out/
+
+# Generated files.
+#
+package.json
+package-lock.json
+tsconfig.json

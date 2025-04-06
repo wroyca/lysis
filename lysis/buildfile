@@ -1,1 +1,29 @@
-./: {*/ -build/} doc{README.md} legal{LICENSE.md} manifest
+./: {*/ -build/ -node_modules/ -out/} json{package tsconfig} doc{README.md} legal{LICENSE.md} manifest
+
+# Node.js package metadata and dependencies.
+#
+json{package}: in{package} manifest
+{
+  dist = true
+  backlink = overwrite
+}
+
+# TypeScript sources and compiler configuration.
+#
+json{tsconfig}: in{tsconfig}
+{
+  dist = true
+  backlink = overwrite
+}
+
+# Vite and forge distribution.
+#
+./: file{forge.config.ts          \
+         forge.env.d.ts           \
+         vite.main.config.ts      \
+         vite.preload.config.ts   \
+         vite.renderer.config.ts} \
+    file{.vite/**}:
+{
+  dist = true
+}

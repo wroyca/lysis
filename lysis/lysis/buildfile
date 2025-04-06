@@ -1,6 +1,69 @@
-libs =
-#import libs += libhello%lib{hello}
+import! npm = npm%exe{npm}
 
-exe{lysis}: {hxx ixx txx cxx}{**} $libs testscript
+platform =
+ext =
 
-cxx.poptions =+ "-I$out_root" "-I$src_root"
+# The platform to build for. This is used to determine `eletron-forge` platform
+# prefix and electron extension.
+#
+switch ($cxx.target.class)
+{
+  case 'linux'
+  {
+    platform = linux-x64
+  }
+
+  case 'macos'
+  {
+    platform = darwin-x64
+  }
+
+  case 'windows'
+  {
+    platform = win32-x64
+    ext = .exe
+  }
+}
+
+# Define the executable target.
+#
+# Note that we're not truly building an executable from source in the
+# traditional sense. Instead, we're pointing to a prebuilt Electron binary and
+# Lysis is packaged separately as an ASAR archive.
+#
+# https://www.electronjs.org/docs/latest/glossary
+#
+./: exe{lysis}: {ts css}{**                  } \
+                {html  }{$src_root/index.html} $npm
+{{
+  depdb hash $npm
+
+  diag npm $>
+
+  # Node commands are scoped explicitly to the intended package with --prefix to
+  # avoid unexpected behavior due to ambiguous path resolution.
+  #
+  $npm install --prefix $src_root $src_root
+  $npm run package --prefix $src_root $src_root
+
+  # Symlink Lysis binary instead of copying it, since it must remain alongside
+  # electron runtime and Lysis ASAR archive to resolve them correctly.
+  #
+  ln -s $src_root/out/lysis-$platform/lysis$ext $out_base
+}}
+
+# Define the runtime installation target.
+#
+# Both Electron runtime and Lysis ASAR archive must be included when packaging
+# and/or installing.
+#
+# NOTE: Exclude the prebuilt binary to avoid conflict—build2 will otherwise see
+# two executables with the same name (one from the build, one from the runtime).
+#
+file{../out/lysis-$platform/** -../out/lysis-$platform/lysis$exe_ext}:
+{
+  install = $install.bin
+  install.subdirs = true
+}
+
+./: file{../out/lysis-$platform/** -../out/lysis-$platform/lysis$exe_ext}

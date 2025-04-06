@@ -11,6 +11,27 @@ email: wroy@proton.me
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0
 
-# Temporarily disables automated builds.
+# ...
 #
 builds: none
+
+fedora-builds: sys
+fedora-build-include: linux_fedora*-**
+fedora-build-exclude: **
+fedora-build-config:
+\
+sys:nodejs
+\
+
+debian-builds: sys
+debian-build-include: linux_debian*-**
+debian-build-exclude: **
+debian-build-config:
+\
+sys:nodejs
+
+# Debian separate nodejs and npm?
+#
+sys:npm
+\
+
