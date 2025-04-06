@@ -1,0 +1,229 @@
+name: Build and test lysis
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '!.github/workflows/**'
+  pull_request:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '!.github/workflows/**'
+  workflow_dispatch:
+
+env:
+  BUILD2_VERSION: 0.18.0-a.0
+  LYSIS_DEVELOP: false
+
+jobs:
+  setup-build2:
+    name: Setup build2
+    uses: ./.github/workflows/setup-build2.yml
+
+  build:
+    name: Build lysis on ${{ matrix.os }}
+    needs: setup-build2
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            shell: bash
+          - os: windows-latest
+            shell: cmd
+          - os: macos-latest
+            shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Set up build environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup cache key inputs
+        id: cache-key
+        shell: bash
+        run: |
+          echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Restore build2 from cache
+        id: cache-build2
+        uses: actions/cache@v3
+        with:
+          path: ~/build2
+          key: build2-${{ env.BUILD2_VERSION }}-${{ runner.os == 'Linux' && 'linux' || runner.os == 'macOS' && 'macos' || 'windows' }}-${{ steps.cache-key.outputs.date }}
+          restore-keys: |
+            build2-${{ env.BUILD2_VERSION }}-${{ runner.os == 'Linux' && 'linux' || runner.os == 'macOS' && 'macos' || 'windows' }}-
+
+      - name: Setup PATH (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          echo "$HOME/build2/bin" >> $GITHUB_PATH
+          ls -la $HOME/build2/bin || echo "build2 directory structure issue"
+
+      - name: Setup PATH (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          echo "%USERPROFILE%\build2\bin" >> %GITHUB_PATH%
+          dir "%USERPROFILE%\build2\bin" || echo "build2 directory structure issue"
+
+      - name: Verify build2 availability
+        shell: bash
+        run: |
+          export PATH="$PATH:$HOME/build2/bin"
+          which bpkg || echo "bpkg not found in PATH"
+          bpkg --version || echo "bpkg command failed"
+
+      - name: Create build directory
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          export PATH="$PATH:$HOME/build2/bin"
+          mkdir -p /tmp/lysis-build
+          cd /tmp/lysis-build
+
+      - name: Create build directory (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
+          mkdir C:\tmp
+          cd C:\tmp
+
+      - name: Create build configuration (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          export PATH="$PATH:$HOME/build2/bin"
+          cd /tmp/lysis-build
+          bpkg -V create -d build cc config.cxx=c++ config.cc.coptions=-Wall config.install.root=/tmp/lysis-build/build/install
+          # Verify Node.js availability
+          node --version
+          npm --version
+
+      - name: Create build configuration (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
+          cd C:\tmp
+          bpkg -V create -d build cc "config.c=clang -m64" "config.cxx=clang++ -m64" config.cc.coptions=-w config.cc.loptions=/IGNORE:4042 config.cc.aoptions=/IGNORE:4221 config.install.root=C:\tmp\build\install
+          REM Verify Node.js availability
+          node --version
+          npm --version
+
+      - name: Add package repository (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          export PATH="$PATH:$HOME/build2/bin"
+          cd /tmp/lysis-build
+          bpkg -v add -d build $GITHUB_WORKSPACE#$GITHUB_SHA
+
+      - name: Add package repository (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
+          cd C:\tmp
+          bpkg -v add -d build %GITHUB_WORKSPACE%#%GITHUB_SHA%
+
+      - name: Fetch package (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          export PATH="$PATH:$HOME/build2/bin"
+          cd /tmp/lysis-build
+          bpkg -v fetch -d build --fetch-timeout=60
+
+      - name: Fetch package (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
+          cd C:\tmp
+          bpkg -v fetch -d build --fetch-timeout=60
+
+      - name: Build and configure package (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          export PATH="$PATH:$HOME/build2/bin"
+          cd /tmp/lysis-build
+          bpkg -v build -d build --configure-only --yes -- lysis
+          bpkg -v build -d build --yes lysis
+
+      - name: Build and configure package (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
+          cd C:\tmp
+          bpkg -v build -d build --configure-only --yes -- lysis
+          bpkg -v build -d build --yes lysis
+
+      - name: Run tests (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          export PATH="$PATH:$HOME/build2/bin"
+          cd /tmp/lysis-build
+          bpkg -v test -d build lysis
+
+      - name: Run tests (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
+          cd C:\tmp
+          bpkg -v test -d build lysis
+
+      - name: Install package (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          export PATH="$PATH:$HOME/build2/bin"
+          cd /tmp/lysis-build
+          cd build
+          b -v install config.install.root=/tmp/lysis-build/build/install
+      - name: Install package (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
+          cd C:\tmp
+          cd build
+          b -v install config.install.root=C:\tmp\build\install
+
+      - name: Test installed package (Linux/macOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        shell: bash
+        run: |
+          export PATH="$PATH:$HOME/build2/bin"
+          cd /tmp/lysis-build
+          find /tmp/lysis-build/build/install -type f | sort
+
+      - name: Test installed package (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          set PATH=%PATH%;%USERPROFILE%\build2\bin
+          cd C:\tmp
+          dir /s /b C:\tmp\build\install
