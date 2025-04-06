@@ -4,4 +4,4 @@ using version
 using config
 using test
 using install
-# using dist ; break nodejs prefix
+using dist
