@@ -6,11 +6,16 @@ ext =
 # The platform to build for. This is used to determine `eletron-forge` platform
 # prefix and electron extension.
 #
-switch ($cxx.target.class)
+switch $cxx.target.class, $cxx.target.cpu
 {
-  case 'linux'
+  case 'linux', 'x86_64'
   {
     platform = linux-x64
+  }
+
+  case 'linux', 'aarch64'
+  {
+    platform = linux-arm64
   }
 
   case 'macos'
