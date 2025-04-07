@@ -24,7 +24,9 @@ sys:nodejs
 \
 
 debian-builds: sys
-debian-build-include: linux_debian_12-**
+debian-build-include: linux_debian_12-gcc_**
+debian-build-include: linux_debian_12-clang_15.0**
+debian-build-include: linux_debian_12-clang_16.0**
 debian-build-exclude: **
 debian-build-config:
 \
