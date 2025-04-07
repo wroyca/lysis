@@ -24,12 +24,10 @@ sys:nodejs
 \
 
 debian-builds: sys
-debian-build-include: linux_debian*-**
+debian-build-include: linux_debian_12-**
 debian-build-exclude: **
 debian-build-config:
 \
-sys:nodejs
-
 # Debian separate nodejs and npm?
 #
 sys:npm
