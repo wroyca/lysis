@@ -1,2 +1,6 @@
 : 1
 summary: lysis project repository
+
+:
+role: prerequisite
+location: https://github.com/codesynthesis-com/cli.git##HEAD
