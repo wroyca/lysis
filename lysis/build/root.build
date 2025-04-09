@@ -1,3 +1,9 @@
+using in
+
+define cli: file
+
+cli{*}: extension = cli
+
 # Uncomment to suppress warnings coming from external libraries.
 #
 # cxx.internal.scope = current
@@ -11,6 +17,22 @@ ixx{*}: extension = ixx
 txx{*}: extension = txx
 cxx{*}: extension = cxx
 
+if ($cxx.target.system == 'win32-msvc')
+  cxx.poptions += -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS
+
 # The test target for cross-testing (running tests under Wine, etc).
 #
 test.target = $cxx.target
+
+# Pre-defined semantics to distinguish between development and consumption
+# builds.
+#
+config [bool] config.lysis.develop ?= false
+develop = $config.lysis.develop # shorthand
+
+# Extract the copyright notice from the LICENSE file.
+#
+# Note that cat is a builtin which means this is both portable and fast.
+#
+if ($build.mode != 'skeleton')
+  copyright = "Copyright (C) 2025 Lysis authors"
