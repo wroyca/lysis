@@ -133,8 +133,50 @@ namespace lysis
       Elf64_Half e_shstrndx;            // Section header string table index.
     };
 
+  public:
+    // Create and return a new ELF parser object. Throw elf_error if the
+    // file is not a valid ELF file.
+    //
+    static elf
+    parse (std::istream& is);
+
+    // Return true if this is a 32-bit ELF file, false if 64-bit.
+    //
+    bool
+    is_32bit () const;
+
+    // Return true if this is a 64-bit ELF file, false if 32-bit.
+    //
+    bool
+    is_64bit () const;
+
+    // Return ELF file class size (32 or 64 bits).
+    //
+    std::uint8_t
+    elf_class () const;
+
+    // Return ELF file endianness (ELFDATA2LSB or ELFDATA2MSB).
+    //
+    std::uint8_t
+    elf_data () const;
+
+    // Return ELF file type (ET_NONE, ET_REL, ET_EXEC, ET_DYN, ET_CORE).
+    //
+    std::uint16_t
+    elf_type () const;
+
+    // Return ELF machine architecture.
+    //
+    std::uint16_t
+    elf_machine () const;
+
   private:
     elf () = default;
+
+    // Read and validate ELF header.
+    //
+    void
+    read_header (std::istream& is);
 
   private:
     std::vector<unsigned char> ident; // ELF identification bytes.
