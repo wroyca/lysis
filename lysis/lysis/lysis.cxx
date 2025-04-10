@@ -1,15 +1,13 @@
-#include <iostream>
+#include <lysis/lysis-application-window.hxx>
 
 int
 main (int argc, char* argv[])
 {
-  using namespace std;
+  g_autoptr (LysisApplication) app = nullptr;
+  int ret;
 
-  if (argc < 2)
-  {
-    cerr << "error: missing name" << endl;
-    return 1;
-  }
+  app = LYSIS_APPLICATION (lysis_application_new ("com.github.wroyca.Lysis", G_APPLICATION_DEFAULT_FLAGS));
+  ret = g_application_run (G_APPLICATION (app), argc, argv);
 
-  cout << "Hello, " << argv[1] << '!' << endl;
+  return ret;
 }

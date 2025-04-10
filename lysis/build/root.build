@@ -14,3 +14,9 @@ cxx{*}: extension = cxx
 # The test target for cross-testing (running tests under Wine, etc).
 #
 test.target = $cxx.target
+
+# Pre-defined semantics to distinguish between development and consumption
+# builds.
+#
+config [bool] config.lysis.develop ?= false
+develop = $config.lysis.develop # shorthand

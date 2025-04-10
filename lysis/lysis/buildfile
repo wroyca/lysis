@@ -1,5 +1,48 @@
 libs =
+import libs += libadwaita%lib{adwaita}
 
-exe{lysis}: {hxx ixx txx cxx}{**} $libs testscript
+./: exe{lysis}: libue{lysis}: {hxx ixx txx cxx}{*} $libs testscript
 
 cxx.poptions =+ "-I$out_root" "-I$src_root"
+
+## Consumption build ($develop == false).
+#
+
+# Use pregenerated resource bundle in the consumption build.
+#
+libue{lysis}: pregenerated/lysis/{cxx}{lysis.gresource...}: include = (!$develop)
+
+if! $develop
+  cxx.poptions =+ "-I($src_base/pregenerated)" # Note: must come first.
+
+# Distribute pregenerated resource bundle only in the consumption build.
+#
+pregenerated/lysis/{cxx}{lysis.gresource...}: dist = (!$develop)
+
+#
+##
+
+## Development build ($develop == true).
+#
+
+libue{lysis}: {cxx}{lysis.gresource...}: include = $develop
+
+if $develop
+  import? rc = glib-compile-resources%exe{glib-compile-resources}
+
+if $develop
+  cxx.poptions += "-DLYSIS_DEVELOP"
+
+# In the development build, regenerate resource bundle and remap its
+# location to the paths of the pregenerated resource bundle.
+#
+cxx{lysis.gresource...}: file{lysis.gresource.xml} $rc
+{
+  dist = ($develop ? pregenerated/lysis/ : false)
+}
+%
+if $develop
+  recipe buildscript lysis.gresource.buildscript
+
+#
+##

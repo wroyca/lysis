@@ -8,5 +8,19 @@ description-file: README.md
 url: https://github.com/wroyca/lysis
 email: wroy@proton.me
 # build-error-email: wroy@proton.me
-depends: * build2 >= 0.17.0
-depends: * bpkg >= 0.17.0
+depends: * build2 >= 0.18.0-
+depends: * bpkg >= 0.18.0-
+
+# CI builds.
+#
+# This package relies on additional libraries that aren't currently packaged and
+# need to be installed through the system package manager.
+#
+# For now, only Fedora 41 is supported, as the required libraries must meet
+# minimum version requirements, and Fedora is the only distribution that
+# consistently provides the necessary up-to-date versions.
+#
+# ... Well, never mind. Despite my best efforts, CI just refuses to find
+# libadwaita-devel.
+#
+builds: none

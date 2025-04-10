@@ -1,0 +1,26 @@
+s = $path($<[0])
+o = $out_base/$name($>)
+t = $(o).t
+
+# Dependency database to rebuild the resource bundle whenever any
+# referenced XML resources change.
+#
+depdb dyndep --format lines --file $t -- \
+  $rc --sourcedir $src_base --generate-dependencies $s | tr ';' '\n' > $t
+
+# Output build diagnostic indicating resource compilation.
+#
+diag rc ($<[0]) -> $>
+
+# Generate resource bundle from XML definition.
+#
+$rc --sourcedir $src_base --generate-source $s --target=$(o).cxx
+
+# Maintain pregenerated resource bundle in the source tree. Update it only
+# when content actually changes to prevent unnecessary version control churn.
+#
+if diff $src_base/pregenerated/lysis/lysis.gresource.cxx $path($>[0]) >-
+  exit
+end
+
+cp $path($>[0]) $src_base/pregenerated/lysis/lysis.gresource.cxx
