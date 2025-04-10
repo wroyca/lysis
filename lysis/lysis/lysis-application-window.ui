@@ -57,9 +57,10 @@
                 <child type="top">
                   <object class="AdwHeaderBar">
                     <child type="start">
-                      <object class="GtkButton">
+                      <object class="GtkButton" id="open_file">
                         <property name="icon-name">list-add-symbolic</property>
-                        <property name="tooltip-text" translatable="yes">Main Page</property>
+                        <property name="tooltip-text" translatable="yes">Open File</property>
+                        <signal name="clicked" handler="lysis_application_window_open_file" swapped="no" />
                       </object>
                     </child>
                   </object>

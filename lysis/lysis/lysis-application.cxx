@@ -11,7 +11,7 @@ static void lysis_application_about (GSimpleAction *action,
                                      gpointer       user_data);
 
 static GActionEntry action_entries[] = {
-  { "about", lysis_application_about },
+  {"about", lysis_application_about},
 };
 
 G_DEFINE_FINAL_TYPE (LysisApplication, lysis_application, ADW_TYPE_APPLICATION)
@@ -48,8 +48,8 @@ lysis_application_class_init (LysisApplicationClass *self)
 
 static void
 lysis_application_about (GSimpleAction *action,
-                         GVariant      *param,
-                         gpointer       user_data)
+                         GVariant *param,
+                         gpointer user_data)
 {
   g_autoptr (LysisApplication) self = nullptr;
   g_autoptr (GtkWindow) window = nullptr;
@@ -81,8 +81,8 @@ lysis_application_init (LysisApplication *self)
 }
 
 LysisApplication *
-lysis_application_new (const char        *application_id,
-                       GApplicationFlags  flags)
+lysis_application_new (const char *application_id,
+                       GApplicationFlags flags)
 {
   g_autoptr (LysisApplication) self = nullptr;
 

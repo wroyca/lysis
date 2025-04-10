@@ -1,7 +1,7 @@
 #include <lysis/lysis-application-window.hxx>
 
 int
-main (int argc, char* argv[])
+main (int argc, char *argv[])
 {
   g_autoptr (LysisApplication) app = nullptr;
   int ret;
