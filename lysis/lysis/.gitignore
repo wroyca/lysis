@@ -1,6 +1,7 @@
 lysis
 
 /options.?xx
+/*-odb.?xx
 
 # Testscript output directory (can be symlink).
 #

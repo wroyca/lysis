@@ -1,9 +1,12 @@
 libs =
+import libs += libodb%lib{odb}
+import libs += libodb-pgsql%lib{odb-pgsql}
 
 ops = options
+dbs = person
 
-./: exe{lysis}: {hxx ixx txx cxx}{** -version -{$ops} -pregenerated/**} \
-                {hxx            }{    version                         }
+./: exe{lysis}: {hxx ixx txx cxx}{** -version -{$ops} -{$dbs-odb} -pregenerated/**} \
+                {hxx            }{    version                                     } $libs
 
 # Target metadata, see also --build2-metadata in lysis.cxx.
 #
@@ -39,7 +42,11 @@ pregenerated/{hxx ixx cxx}{*}: dist = (!$develop)
 ## Development build ($develop == true).
 #
 
-exe{lysis}: {hxx ixx cxx}{$ops}: include = $develop
+exe{lysis}: {hxx ixx cxx}{$ops}:     include = $develop
+exe{lysis}: {hxx ixx cxx}{$dbs-odb}: include = $develop
+
+## CLI
+#
 
 if $develop
   import! [metadata] cli = cli%exe{cli}
@@ -51,7 +58,7 @@ if $develop
 #
 for f: $ops
 {
-  d = $directory($f) # empty, cxx/, etc.
+  d = $directory($f)
 
   <{hxx ixx cxx}{$f}>: cli{$f}
   {
@@ -108,5 +115,69 @@ if $develop
 #
 ##
 
-exe{lysis}: $libs
+## ODB
+#
 
+if $develop
+  import! [metadata] odb = odb%exe{odb}
+
+for f: $dbs
+{
+  libue{$f-meta}: $libs
+
+  exe{lysis}: libue{$f-meta} $libs
+
+  <{hxx ixx cxx}{$f-odb}>: hxx{$f} libue{$f-meta} $odb
+  {
+    dist = ($develop ? $relative([dir_path] "pregenerated/lysis/$d", $d) : false)
+
+    # Symlink the generated code in src for convenience of development.
+    #
+    backlink = true
+  }
+}
+
+<{hxx ixx cxx}{~'/(.+)-odb/'}>: hxx{~'/\1/'} libue{~'/.+-meta/'} $odb
+%
+if $develop
+{{
+  pops = $cxx.lib_poptions($<[1])
+
+  depdb hash $pops
+
+  h = $path($>[0])
+  i = $path($>[1])
+  c = $path($>[2])
+
+  d = $directory($h)
+  p = $string($leaf($d, $out_root))
+
+  options = --std c++11 --database pgsql -I $src_root               \
+            --include-with-brackets --include-prefix $p             \
+            --guard-prefix $regex.replace($ucase($p), '[/\\]', '_') \
+            --generate-schema --generate-query                      \
+            --output-dir $out_base
+
+  $odb $options $pops $path($<[0])
+
+  # If the result differs from the pregenerated version, copy it over.
+  #
+  d = [dir_path] $src_base/pregenerated/$p
+
+  dh = $d/$leaf($h)
+  di = $d/$leaf($i)
+  dc = $d/$leaf($c)
+
+  if diff $dh $h >- && \
+     diff $di $i >- && \
+     diff $dc $c >-
+    exit
+  end
+
+  cp $h $dh
+  cp $i $di
+  cp $c $dc
+}}
+
+#
+##

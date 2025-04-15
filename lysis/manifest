@@ -11,3 +11,6 @@ email: wroy@proton.me
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0
 depends: * cli ^1.2.0- ? ($config.lysis.develop)
+depends: * odb ^2.5.0- ? ($config.lysis.develop)
+depends: libodb >= 2.5.0
+depends: libodb-pgsql >= 2.5.0
