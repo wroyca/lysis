@@ -1,4 +1,9 @@
+import! [metadata] odb = odb%exe{odb}
+import! [metadata] cli = cli%exe{cli}
+
 libs =
+import libs += libodb%lib{odb}
+import libs += libodb-pgsql%lib{odb-pgsql}
 
 exe{lysis}: {hxx ixx txx cxx}{**} $libs testscript
 
