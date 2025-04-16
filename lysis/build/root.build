@@ -11,6 +11,41 @@ ixx{*}: extension = ixx
 txx{*}: extension = txx
 cxx{*}: extension = cxx
 
+if ($build.mode != 'skeleton')
+{
+  import! [metadata] odb = odb%exe{odb}
+
+  # Rule definition: ODB see-through compilation group.
+  #
+  # Transforme object-relational model interface headers (`*.hxx`) into their
+  # corresponding translation units (`*-odb.cxx`) and auxiliary interface units
+  # (`*-odb.hxx`, `*-odb.ixx`) using the ODB compiler.
+  #
+  define [see_through] odb: group
+
+  # Rule pattern: ODB resolution logic for derived targets.
+  #
+  [rule_name=odb_compile] odb{~'/(.+)/'}<{hxx cxx ixx}{^'/\1-odb/'}>: \
+    hxx{~'/\1/'} libue{~'/.+-meta/'}
+  {{
+    pops = $cxx.lib_poptions($<[1])
+
+    depdb hash $pops
+
+    h = $path($>[1])
+    d = $directory($h)
+    p = $string($leaf($d, $out_root))
+
+    options = --std c++11 --database pgsql -I $src_root               \
+              --include-with-brackets --include-prefix $p             \
+              --guard-prefix $regex.replace($ucase($p), '[/\\]', '_') \
+              --generate-schema --generate-query                      \
+              --output-dir $out_base
+
+    $odb $options $pops $path($<[0])
+  }}
+}
+
 # The test target for cross-testing (running tests under Wine, etc).
 #
 test.target = $cxx.target

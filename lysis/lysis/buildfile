@@ -1,10 +1,19 @@
-import! [metadata] odb = odb%exe{odb}
-import! [metadata] cli = cli%exe{cli}
-
 libs =
 import libs += libodb%lib{odb}
 import libs += libodb-pgsql%lib{odb-pgsql}
 
+model = person
+
 exe{lysis}: {hxx ixx txx cxx}{**} $libs testscript
+exe{lysis}: {odb}{$model}: include = adhoc
+
+for m: $model
+{
+  libue{$m-meta}: $libs
+
+  exe{lysis}: libue{$m-meta} $libs
+
+  odb{$m}: hxx{$m} libue{$m-meta} $odb
+}
 
 cxx.poptions =+ "-I$out_root" "-I$src_root"
