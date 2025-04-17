@@ -3,3 +3,9 @@ lysis
 # Testscript output directory (can be symlink).
 #
 test-lysis
+
+# Whitelist pregenerated output directory.
+#
+!pregenerated/lysis
+
+
