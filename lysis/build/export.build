@@ -1,0 +1,6 @@
+$out_root/
+{
+  include lysis/
+}
+
+export $out_root/lysis/exe{lysis}

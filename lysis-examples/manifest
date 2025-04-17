@@ -1,9 +1,10 @@
 : 1
 name: lysis-examples
 version: 0.1.0-a.0.z
+type: examples
 language: c++
 project: lysis
-summary: lysis-examples C++ executable
+summary: lysis C++ executable; examples
 license: GPL-3.0-or-later ; GNU General Public License v3.0 or later.
 description-file: README.md
 url: https://github.com/wroyca/lysis

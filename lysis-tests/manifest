@@ -1,9 +1,10 @@
 : 1
 name: lysis-tests
 version: 0.1.0-a.0.z
+type: tests
 language: c++
 project: lysis
-summary: lysis-tests C++ executable
+summary: lysis C++ executable; tests
 license: GPL-3.0-or-later ; GNU General Public License v3.0 or later.
 description-file: README.md
 url: https://github.com/wroyca/lysis

@@ -3,4 +3,14 @@ libs =
 
 exe{lysis}: {hxx ixx txx cxx}{**} $libs testscript
 
+# Target metadata, see also --build2-metadata in lysis.cxx.
+#
+exe{lysis}:
+{
+  export.metadata = 1 lysis
+  lysis.name = [string] lysis
+  lysis.version  = [string] $version
+  lysis.checksum = [string] $version
+}
+
 cxx.poptions =+ "-I$out_root" "-I$src_root"

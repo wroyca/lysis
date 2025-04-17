@@ -11,3 +11,5 @@ email: wroy@proton.me
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0
 #depends: libhello ^1.0.0
+tests: * lysis-tests == $
+examples: * lysis-examples == $
