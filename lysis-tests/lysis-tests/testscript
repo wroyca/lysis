@@ -1,9 +1,6 @@
 : basics
 :
-$* 'World' >'Hello, World!'
-
-: missing-name
-:
-$* 2>>EOE != 0
-error: missing name
-EOE
+$* --version <<EOI >>~/EOO/
+EOI
+/Lysis .+/
+EOO

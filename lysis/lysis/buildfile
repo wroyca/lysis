@@ -6,7 +6,7 @@ ops = lysis
 mod = workspace
 
 exe{lysis}: {hxx ixx txx cxx}{** -version -{$ops-options} -{$mod-odb} -pregenerated/**} \
-            {hxx            }{    version                                             } $libs testscript
+            {hxx            }{    version                                             } $libs
 
 # Target metadata, see also --build2-metadata in lysis.cxx.
 #
