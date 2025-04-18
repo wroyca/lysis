@@ -1,0 +1,86 @@
+define lysis: doc
+
+lysis{*}: extension = lysis
+
+# Note: doc_version is used in the man pages.
+#
+doc_version = [string] "$version.major.$version.minor.$version.patch"
+if $version.pre_release
+  doc_version += "-$version.pre_release_string"
+
+# Man pages.
+#
+
+## Consumption build ($develop == false).
+#
+
+# Use pregenerated versions in the consumption build.
+#
+./: pregenerated/{man1}{**}: include = (!$develop)
+
+# Distribute pregenerated versions only in the consumption build.
+#
+pregenerated/{man1}{**}: dist = (!$develop)
+
+#
+##
+
+## Development build ($develop == true).
+#
+
+./: {man1}{lysis}: include = $develop
+
+if $develop
+{
+  doc_year = 2025
+
+  man_options = -v project="Lysis"        \
+                -v version="$doc_version" \
+                -v copyright="$copyright" \
+                -I $src_root              \
+                --stdout                  \
+                --suppress-undocumented   \
+                --exclude-base
+
+  import! [metadata] cli = cli%exe{cli}
+}
+
+# In the development build distribute regenerated versions, remapping their
+# locations to the paths of the pregenerated versions (which are only
+# distributed in the consumption build; see above). This way we make sure that
+# the distributed files are always up-to-date.
+#
+{man1}{lysis}: dist = ($develop ? pregenerated/lysis/ : false)
+
+ops = ../lysis/cli{lysis}
+
+man1{lysis}: $ops                   \
+             file{lysis-prologue.1  \
+                  lysis-epilogue.1} \
+             $cli
+%
+if $develop
+{{
+  o = $path($>)
+
+  # Use the copyright year to approximate the last authoring date.
+  #
+  $cli --generate-man $man_options      \
+       -v date="$doc_year"              \
+       --class lysis::options           \
+       --man-prologue-file $path($<[1]) \
+       --man-epilogue-file $path($<[2]) \
+       $path($<) >$o
+
+  # If the result differs from the pregenerated version, copy it over.
+  #
+  if! diff $src_base/pregenerated/lysis/lysis.1 $o >-
+    cp $o $src_base/pregenerated/lysis/lysis.1
+  end
+}}
+
+#
+##
+
+doc{*}:               install.subdirs = true
+pregenerated/doc{**}: install.subdirs = true
