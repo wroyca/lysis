@@ -5,7 +5,8 @@ import libs += libodb-sqlite%lib{odb-sqlite}
 ops = lysis
 mod = workspace
 
-exe{lysis}: {hxx ixx txx cxx}{** -{$ops-options} -{$mod-odb} -pregenerated/**} $libs testscript
+exe{lysis}: {hxx ixx txx cxx}{** -version -{$ops-options} -{$mod-odb} -pregenerated/**} \
+            {hxx            }{    version                                             } $libs testscript
 
 # Target metadata, see also --build2-metadata in lysis.cxx.
 #
@@ -16,6 +17,8 @@ exe{lysis}:
   lysis.version  = [string] $version
   lysis.checksum = [string] $version
 }
+
+hxx{version}: in{version} $src_root/manifest
 
 cxx.poptions =+ "-I$out_root" "-I$src_root"
 

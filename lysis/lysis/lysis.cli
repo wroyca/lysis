@@ -5,5 +5,15 @@ namespace lysis
   class options
   {
     std::uint64_t --build2-metadata; // Leave undocumented/hidden.
+
+    bool --help
+    {
+      "Print usage information and exit."
+    };
+
+    bool --version
+    {
+      "Print version and exit."
+    };
   };
 }

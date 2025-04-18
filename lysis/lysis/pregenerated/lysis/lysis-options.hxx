@@ -476,6 +476,12 @@ namespace lysis
     bool
     build2_metadata_specified () const;
 
+    const bool&
+    help () const;
+
+    const bool&
+    version () const;
+
     // Print usage information.
     //
     static ::lysis::cli::usage_para
@@ -497,6 +503,8 @@ namespace lysis
     public:
     std::uint64_t build2_metadata_;
     bool build2_metadata_specified_;
+    bool help_;
+    bool version_;
   };
 }
 

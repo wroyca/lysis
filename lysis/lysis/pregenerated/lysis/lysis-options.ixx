@@ -292,6 +292,18 @@ namespace lysis
   {
     return this->build2_metadata_specified_;
   }
+
+  inline const bool& options::
+  help () const
+  {
+    return this->help_;
+  }
+
+  inline const bool& options::
+  version () const
+  {
+    return this->version_;
+  }
 }
 
 // Begin epilogue.

@@ -762,7 +762,9 @@ namespace lysis
   options::
   options ()
   : build2_metadata_ (),
-    build2_metadata_specified_ (false)
+    build2_metadata_specified_ (false),
+    help_ (),
+    version_ ()
   {
   }
 
@@ -773,7 +775,9 @@ namespace lysis
            ::lysis::cli::unknown_mode opt,
            ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
-    build2_metadata_specified_ (false)
+    build2_metadata_specified_ (false),
+    help_ (),
+    version_ ()
   {
     ::lysis::cli::argv_scanner s (argc, argv, erase);
     _parse (s, opt, arg);
@@ -787,7 +791,9 @@ namespace lysis
            ::lysis::cli::unknown_mode opt,
            ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
-    build2_metadata_specified_ (false)
+    build2_metadata_specified_ (false),
+    help_ (),
+    version_ ()
   {
     ::lysis::cli::argv_scanner s (start, argc, argv, erase);
     _parse (s, opt, arg);
@@ -801,7 +807,9 @@ namespace lysis
            ::lysis::cli::unknown_mode opt,
            ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
-    build2_metadata_specified_ (false)
+    build2_metadata_specified_ (false),
+    help_ (),
+    version_ ()
   {
     ::lysis::cli::argv_scanner s (argc, argv, erase);
     _parse (s, opt, arg);
@@ -817,7 +825,9 @@ namespace lysis
            ::lysis::cli::unknown_mode opt,
            ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
-    build2_metadata_specified_ (false)
+    build2_metadata_specified_ (false),
+    help_ (),
+    version_ ()
   {
     ::lysis::cli::argv_scanner s (start, argc, argv, erase);
     _parse (s, opt, arg);
@@ -829,7 +839,9 @@ namespace lysis
            ::lysis::cli::unknown_mode opt,
            ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
-    build2_metadata_specified_ (false)
+    build2_metadata_specified_ (false),
+    help_ (),
+    version_ ()
   {
     _parse (s, opt, arg);
   }
@@ -838,6 +850,15 @@ namespace lysis
   print_usage (::std::ostream& os, ::lysis::cli::usage_para p)
   {
     CLI_POTENTIALLY_UNUSED (os);
+
+    if (p == ::lysis::cli::usage_para::text)
+      os << ::std::endl;
+
+    os << "--help    Print usage information and exit." << ::std::endl;
+
+    os << "--version Print version and exit." << ::std::endl;
+
+    p = ::lysis::cli::usage_para::option;
 
     return p;
   }
@@ -855,6 +876,10 @@ namespace lysis
       _cli_options_map_["--build2-metadata"] =
       &::lysis::cli::thunk< options, std::uint64_t, &options::build2_metadata_,
         &options::build2_metadata_specified_ >;
+      _cli_options_map_["--help"] =
+      &::lysis::cli::thunk< options, &options::help_ >;
+      _cli_options_map_["--version"] =
+      &::lysis::cli::thunk< options, &options::version_ >;
     }
   };
 
