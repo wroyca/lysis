@@ -1,6 +1,8 @@
 define lysis: doc
-
 lysis{*}: extension = lysis
+
+define xhtml: doc
+xhtml{*}: extension = xhtml
 
 # Note: doc_version is used in the man pages.
 #
@@ -16,11 +18,11 @@ if $version.pre_release
 
 # Use pregenerated versions in the consumption build.
 #
-./: pregenerated/{man1}{**}: include = (!$develop)
+./: pregenerated/{man1 xhtml}{**}: include = (!$develop)
 
 # Distribute pregenerated versions only in the consumption build.
 #
-pregenerated/{man1}{**}: dist = (!$develop)
+pregenerated/{man1 xhtml}{**}: dist = (!$develop)
 
 #
 ##
@@ -28,7 +30,7 @@ pregenerated/{man1}{**}: dist = (!$develop)
 ## Development build ($develop == true).
 #
 
-./: {man1}{lysis}: include = $develop
+./: {man1 xhtml}{lysis}: include = $develop
 
 if $develop
 {
@@ -50,7 +52,7 @@ if $develop
 # distributed in the consumption build; see above). This way we make sure that
 # the distributed files are always up-to-date.
 #
-{man1}{lysis}: dist = ($develop ? pregenerated/lysis/ : false)
+{man1 xhtml}{lysis}: dist = ($develop ? pregenerated/lysis/ : false)
 
 ops = ../lysis/cli{lysis}
 
@@ -76,6 +78,31 @@ if $develop
   #
   if! diff $src_base/pregenerated/lysis/lysis.1 $o >-
     cp $o $src_base/pregenerated/lysis/lysis.1
+  end
+}}
+
+xhtml{lysis}: $ops                  \
+              xhtml{lysis-prologue  \
+                    lysis-epilogue} \
+              $cli
+%
+if $develop
+{{
+  o = $path($>)
+
+  # Use the copyright year to approximate the last authoring date.
+  #
+  $cli --generate-html $man_options      \
+       -v date="$doc_year"              \
+       --class lysis::options           \
+       --html-prologue-file $path($<[1]) \
+       --html-epilogue-file $path($<[2]) \
+       $path($<) >$o
+
+  # If the result differs from the pregenerated version, copy it over.
+  #
+  if! diff $src_base/pregenerated/lysis/lysis.xhtml $o >-
+    cp $o $src_base/pregenerated/lysis/lysis.xhtml
   end
 }}
 
