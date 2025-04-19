@@ -1,8 +1,13 @@
 define lysis: doc
 lysis{*}: extension = lysis
 
+define css: doc
+css{*}: extension = css
+
 define xhtml: doc
 xhtml{*}: extension = xhtml
+
+./: css{lysis}
 
 # Note: doc_version is used in the man pages.
 #
