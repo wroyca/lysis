@@ -756,11 +756,11 @@ namespace lysis
 
 namespace lysis
 {
-  // options
+  // lysis_options
   //
 
-  options::
-  options ()
+  lysis_options::
+  lysis_options ()
   : build2_metadata_ (),
     build2_metadata_specified_ (false),
     help_ (),
@@ -768,12 +768,12 @@ namespace lysis
   {
   }
 
-  options::
-  options (int& argc,
-           char** argv,
-           bool erase,
-           ::lysis::cli::unknown_mode opt,
-           ::lysis::cli::unknown_mode arg)
+  lysis_options::
+  lysis_options (int& argc,
+                 char** argv,
+                 bool erase,
+                 ::lysis::cli::unknown_mode opt,
+                 ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
     build2_metadata_specified_ (false),
     help_ (),
@@ -783,13 +783,13 @@ namespace lysis
     _parse (s, opt, arg);
   }
 
-  options::
-  options (int start,
-           int& argc,
-           char** argv,
-           bool erase,
-           ::lysis::cli::unknown_mode opt,
-           ::lysis::cli::unknown_mode arg)
+  lysis_options::
+  lysis_options (int start,
+                 int& argc,
+                 char** argv,
+                 bool erase,
+                 ::lysis::cli::unknown_mode opt,
+                 ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
     build2_metadata_specified_ (false),
     help_ (),
@@ -799,13 +799,13 @@ namespace lysis
     _parse (s, opt, arg);
   }
 
-  options::
-  options (int& argc,
-           char** argv,
-           int& end,
-           bool erase,
-           ::lysis::cli::unknown_mode opt,
-           ::lysis::cli::unknown_mode arg)
+  lysis_options::
+  lysis_options (int& argc,
+                 char** argv,
+                 int& end,
+                 bool erase,
+                 ::lysis::cli::unknown_mode opt,
+                 ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
     build2_metadata_specified_ (false),
     help_ (),
@@ -816,14 +816,14 @@ namespace lysis
     end = s.end ();
   }
 
-  options::
-  options (int start,
-           int& argc,
-           char** argv,
-           int& end,
-           bool erase,
-           ::lysis::cli::unknown_mode opt,
-           ::lysis::cli::unknown_mode arg)
+  lysis_options::
+  lysis_options (int start,
+                 int& argc,
+                 char** argv,
+                 int& end,
+                 bool erase,
+                 ::lysis::cli::unknown_mode opt,
+                 ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
     build2_metadata_specified_ (false),
     help_ (),
@@ -834,10 +834,10 @@ namespace lysis
     end = s.end ();
   }
 
-  options::
-  options (::lysis::cli::scanner& s,
-           ::lysis::cli::unknown_mode opt,
-           ::lysis::cli::unknown_mode arg)
+  lysis_options::
+  lysis_options (::lysis::cli::scanner& s,
+                 ::lysis::cli::unknown_mode opt,
+                 ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
     build2_metadata_specified_ (false),
     help_ (),
@@ -846,15 +846,18 @@ namespace lysis
     _parse (s, opt, arg);
   }
 
-  ::lysis::cli::usage_para options::
+  ::lysis::cli::usage_para lysis_options::
   print_usage (::std::ostream& os, ::lysis::cli::usage_para p)
   {
     CLI_POTENTIALLY_UNUSED (os);
 
-    if (p == ::lysis::cli::usage_para::text)
+    if (p != ::lysis::cli::usage_para::none)
       os << ::std::endl;
 
-    os << "--help    Print usage information and exit." << ::std::endl;
+    os << "OPTIONS" << ::std::endl;
+
+    os << std::endl
+       << "--help    Print usage information and exit." << ::std::endl;
 
     os << "--version Print version and exit." << ::std::endl;
 
@@ -864,33 +867,33 @@ namespace lysis
   }
 
   typedef
-  std::map<std::string, void (*) (options&, ::lysis::cli::scanner&)>
-  _cli_options_map;
+  std::map<std::string, void (*) (lysis_options&, ::lysis::cli::scanner&)>
+  _cli_lysis_options_map;
 
-  static _cli_options_map _cli_options_map_;
+  static _cli_lysis_options_map _cli_lysis_options_map_;
 
-  struct _cli_options_map_init
+  struct _cli_lysis_options_map_init
   {
-    _cli_options_map_init ()
+    _cli_lysis_options_map_init ()
     {
-      _cli_options_map_["--build2-metadata"] =
-      &::lysis::cli::thunk< options, std::uint64_t, &options::build2_metadata_,
-        &options::build2_metadata_specified_ >;
-      _cli_options_map_["--help"] =
-      &::lysis::cli::thunk< options, &options::help_ >;
-      _cli_options_map_["--version"] =
-      &::lysis::cli::thunk< options, &options::version_ >;
+      _cli_lysis_options_map_["--build2-metadata"] =
+      &::lysis::cli::thunk< lysis_options, std::uint64_t, &lysis_options::build2_metadata_,
+        &lysis_options::build2_metadata_specified_ >;
+      _cli_lysis_options_map_["--help"] =
+      &::lysis::cli::thunk< lysis_options, &lysis_options::help_ >;
+      _cli_lysis_options_map_["--version"] =
+      &::lysis::cli::thunk< lysis_options, &lysis_options::version_ >;
     }
   };
 
-  static _cli_options_map_init _cli_options_map_init_;
+  static _cli_lysis_options_map_init _cli_lysis_options_map_init_;
 
-  bool options::
+  bool lysis_options::
   _parse (const char* o, ::lysis::cli::scanner& s)
   {
-    _cli_options_map::const_iterator i (_cli_options_map_.find (o));
+    _cli_lysis_options_map::const_iterator i (_cli_lysis_options_map_.find (o));
 
-    if (i != _cli_options_map_.end ())
+    if (i != _cli_lysis_options_map_.end ())
     {
       (*(i->second)) (*this, s);
       return true;
@@ -899,7 +902,7 @@ namespace lysis
     return false;
   }
 
-  bool options::
+  bool lysis_options::
   _parse (::lysis::cli::scanner& s,
           ::lysis::cli::unknown_mode opt_mode,
           ::lysis::cli::unknown_mode arg_mode)

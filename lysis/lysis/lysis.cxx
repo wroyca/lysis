@@ -1,39 +1,28 @@
+#include <filesystem>
 #include <iostream>
 
-#include <lysis/version.hxx>
 #include <lysis/lysis-options.hxx>
+#include <lysis/version.hxx>
 
 using namespace std;
 using namespace lysis;
-
-namespace lysis
-{
-  namespace
-  {
-    void
-    usage (ostream& os)
-    {
-      os << "usage: driver [options] <names>" << endl
-         << "options:"                        << endl;
-
-      options::print_usage (os);
-    }
-  }
-}
 
 int
 main (int argc, char* argv[])
 {
   try
   {
-    options o (argc, argv);
+    int end; // end of options
+    lysis_options ops (argc, argv, end);
 
-    if (o.build2_metadata_specified ())
+    // Handle --build2-metadata (see also buildfile).
+    //
+    if (ops.build2_metadata ())
     {
       auto& o (cout);
 
-      // Note that the export.metadata variable should be the first non-
-      // blank/comment line.
+      // Note that the export.metadata variable should be the first
+      // non-blank/comment line.
       //
       o << "# build2 buildfile lysis"                                  << endl
         << "export.metadata = 1 lysis"                                 << endl
@@ -44,22 +33,91 @@ main (int argc, char* argv[])
       return 0;
     }
 
-    if (o.help ())
+    // Handle --version.
+    //
+    if (ops.version ())
     {
-      usage (cout);
+      auto& o (cout);
+
+      o << "Lysis " << LYSIS_VERSION_ID << endl;
+
       return 0;
     }
 
-    if (o.version ())
+    // Handle --help.
+    //
+    if (ops.help ())
     {
-      cout << "Lysis " << LYSIS_VERSION_ID << endl;
+      auto& o (cout);
+
+      o << "usage: lysis [options] <names>" << endl
+        << "options:"                       << endl;
+
+      ops.print_usage (o);
+
       return 0;
     }
+
+    // We must provide at least one name,
+    //
+    if (end == argc)
+    {
+      auto& e (cerr);
+
+      e << "error: missing names."                    << endl
+        << "try 'lysis --help' for more information." << endl;
+
+      ops.print_usage (e);
+
+      return 1;
+    }
+
+    list <filesystem::path> l;
+    {
+      // Resolves given names into canonical filesystem path.
+      //
+      // First, attempts resolution as-is, failed that, attempts resolution
+      // relative to the current working directory.
+      //
+      for (int i = end; i < argc; i++)
+      {
+        filesystem::path p;
+
+        try
+        {
+          p = filesystem::canonical (argv[i]);
+        }
+
+        catch (const filesystem::filesystem_error&)
+        {
+          filesystem::path cwd = filesystem::current_path ();
+
+          try
+          {
+            p = filesystem::canonical (cwd / argv[i]);
+          }
+
+          catch (const filesystem::filesystem_error&)
+          {
+            auto& e (cerr);
+
+            e << "error: unable to locate '" << argv[i]
+              << "' in provided path or current directory." << endl;
+
+            return 1;
+          }
+        }
+
+        // Push the canonical path to the list, so that we can
+        // later use it around the database machinery.
+        //
+        l.push_back (p);
+      }
+    }
   }
+
   catch (const cli::exception& e)
   {
-    cerr << e << endl;
-    usage (cerr);
     return 1;
   }
 }

@@ -2,9 +2,20 @@ include <cstdint>; // std::uint64_t
 
 namespace lysis
 {
-  class options
   {
-    std::uint64_t --build2-metadata; // Leave undocumented/hidden.
+    "
+    \h0#preface|Preface|
+
+    This manual documents \b{Lysis}. For corrections or improvements, please
+    submit issues at https://github.com/user/lysis.
+    "
+  }
+
+  class lysis_options
+  {
+    "\h#options|OPTIONS|"
+
+    std::uint64_t --build2-metadata; // leave undocumented/hidden
 
     bool --help
     {

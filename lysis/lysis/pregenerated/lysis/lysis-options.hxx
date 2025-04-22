@@ -431,42 +431,42 @@ namespace lysis
 
 namespace lysis
 {
-  class options
+  class lysis_options
   {
     public:
-    options ();
+    lysis_options ();
 
-    options (int& argc,
-             char** argv,
-             bool erase = false,
-             ::lysis::cli::unknown_mode option = ::lysis::cli::unknown_mode::fail,
-             ::lysis::cli::unknown_mode argument = ::lysis::cli::unknown_mode::stop);
+    lysis_options (int& argc,
+                   char** argv,
+                   bool erase = false,
+                   ::lysis::cli::unknown_mode option = ::lysis::cli::unknown_mode::fail,
+                   ::lysis::cli::unknown_mode argument = ::lysis::cli::unknown_mode::stop);
 
-    options (int start,
-             int& argc,
-             char** argv,
-             bool erase = false,
-             ::lysis::cli::unknown_mode option = ::lysis::cli::unknown_mode::fail,
-             ::lysis::cli::unknown_mode argument = ::lysis::cli::unknown_mode::stop);
+    lysis_options (int start,
+                   int& argc,
+                   char** argv,
+                   bool erase = false,
+                   ::lysis::cli::unknown_mode option = ::lysis::cli::unknown_mode::fail,
+                   ::lysis::cli::unknown_mode argument = ::lysis::cli::unknown_mode::stop);
 
-    options (int& argc,
-             char** argv,
-             int& end,
-             bool erase = false,
-             ::lysis::cli::unknown_mode option = ::lysis::cli::unknown_mode::fail,
-             ::lysis::cli::unknown_mode argument = ::lysis::cli::unknown_mode::stop);
+    lysis_options (int& argc,
+                   char** argv,
+                   int& end,
+                   bool erase = false,
+                   ::lysis::cli::unknown_mode option = ::lysis::cli::unknown_mode::fail,
+                   ::lysis::cli::unknown_mode argument = ::lysis::cli::unknown_mode::stop);
 
-    options (int start,
-             int& argc,
-             char** argv,
-             int& end,
-             bool erase = false,
-             ::lysis::cli::unknown_mode option = ::lysis::cli::unknown_mode::fail,
-             ::lysis::cli::unknown_mode argument = ::lysis::cli::unknown_mode::stop);
+    lysis_options (int start,
+                   int& argc,
+                   char** argv,
+                   int& end,
+                   bool erase = false,
+                   ::lysis::cli::unknown_mode option = ::lysis::cli::unknown_mode::fail,
+                   ::lysis::cli::unknown_mode argument = ::lysis::cli::unknown_mode::stop);
 
-    options (::lysis::cli::scanner&,
-             ::lysis::cli::unknown_mode option = ::lysis::cli::unknown_mode::fail,
-             ::lysis::cli::unknown_mode argument = ::lysis::cli::unknown_mode::stop);
+    lysis_options (::lysis::cli::scanner&,
+                   ::lysis::cli::unknown_mode option = ::lysis::cli::unknown_mode::fail,
+                   ::lysis::cli::unknown_mode argument = ::lysis::cli::unknown_mode::stop);
 
     // Option accessors.
     //

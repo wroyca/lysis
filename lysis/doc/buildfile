@@ -74,7 +74,6 @@ if $develop
   #
   $cli --generate-man $man_options      \
        -v date="$doc_year"              \
-       --class lysis::options           \
        --man-prologue-file $path($<[1]) \
        --man-epilogue-file $path($<[2]) \
        $path($<) >$o
@@ -98,8 +97,7 @@ if $develop
   # Use the copyright year to approximate the last authoring date.
   #
   $cli --generate-html $man_options      \
-       -v date="$doc_year"              \
-       --class lysis::options           \
+       -v date="$doc_year"               \
        --html-prologue-file $path($<[1]) \
        --html-epilogue-file $path($<[2]) \
        $path($<) >$o

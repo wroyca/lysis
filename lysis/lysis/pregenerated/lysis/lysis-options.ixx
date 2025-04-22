@@ -278,28 +278,28 @@ namespace lysis
 
 namespace lysis
 {
-  // options
+  // lysis_options
   //
 
-  inline const std::uint64_t& options::
+  inline const std::uint64_t& lysis_options::
   build2_metadata () const
   {
     return this->build2_metadata_;
   }
 
-  inline bool options::
+  inline bool lysis_options::
   build2_metadata_specified () const
   {
     return this->build2_metadata_specified_;
   }
 
-  inline const bool& options::
+  inline const bool& lysis_options::
   help () const
   {
     return this->help_;
   }
 
-  inline const bool& options::
+  inline const bool& lysis_options::
   version () const
   {
     return this->version_;
