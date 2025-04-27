@@ -1,18 +1,22 @@
 #include <filesystem>
 #include <iostream>
 
+#include <lysis/database.hxx>
 #include <lysis/lysis-options.hxx>
 #include <lysis/version.hxx>
 
 using namespace std;
+using namespace std::filesystem;
 using namespace lysis;
 
 int
 main (int argc, char* argv[])
 {
+  database db ("/tmp/lysis.db");
+
   try
   {
-    int end; // end of options
+    int end; // end of parsed options
     lysis_options ops (argc, argv, end);
 
     // Handle --build2-metadata (see also buildfile).
@@ -21,8 +25,8 @@ main (int argc, char* argv[])
     {
       auto& o (cout);
 
-      // Note that the export.metadata variable should be the first
-      // non-blank/comment line.
+      // The export.metadata variable must be the first
+      // non-blank, non-comment line.
       //
       o << "# build2 buildfile lysis"                                  << endl
         << "export.metadata = 1 lysis"                                 << endl
@@ -58,7 +62,7 @@ main (int argc, char* argv[])
       return 0;
     }
 
-    // We must provide at least one name,
+    // At least one name must be provided.
     //
     if (end == argc)
     {
@@ -72,47 +76,77 @@ main (int argc, char* argv[])
       return 1;
     }
 
-    list <filesystem::path> l;
+    // Resolve given names into canonical filesystem paths.
+    //
+    // First, attempts resolution as-is, failed that, attempts resolution
+    // relative to the current working directory.
+    //
+    for (int i = end; i < argc; i++)
     {
-      // Resolves given names into canonical filesystem path.
-      //
-      // First, attempts resolution as-is, failed that, attempts resolution
-      // relative to the current working directory.
-      //
-      for (int i = end; i < argc; i++)
+      path p;
+
+      try
       {
-        filesystem::path p;
+        p = canonical (argv[i]);
+      }
+
+      catch (const filesystem_error&)
+      {
+        path cwd = current_path ();
 
         try
         {
-          p = filesystem::canonical (argv[i]);
+          p = canonical (cwd / argv[i]);
         }
 
-        catch (const filesystem::filesystem_error&)
+        catch (const filesystem_error&)
         {
-          filesystem::path cwd = filesystem::current_path ();
+          auto& e (cerr);
 
-          try
-          {
-            p = filesystem::canonical (cwd / argv[i]);
-          }
+          e << "error: unable to locate '" << argv[i]
+            << "' in provided path or current directory." << endl;
 
-          catch (const filesystem::filesystem_error&)
-          {
-            auto& e (cerr);
-
-            e << "error: unable to locate '" << argv[i]
-              << "' in provided path or current directory." << endl;
-
-            return 1;
-          }
+          return 1;
         }
-
-        // Push the canonical path to the list, so that we can
-        // later use it around the database machinery.
-        //
-        l.push_back (p);
       }
+
+      // Set up the workspace directory structure.
+      //
+      // First, check if the workspace directory exists. If it does not, create
+      // the necessary directory structure.
+      //
+      try
+      {
+        (void) canonical (p.stem () / ".lysis");
+      }
+
+      // Directory does not exist; create it.
+      //
+      // Note: the workspace name is derived from the binary's stem. While not
+      // strictly required, keeping the workspace and binary names aligned is
+      // generally a good idea.
+      //
+      //
+      catch (const filesystem_error&)
+      {
+        error_code ec;
+
+        create_directories (p.stem () / ".lysis", ec);
+
+        if (ec)
+        {
+          auto& e (cerr);
+
+          e << "error: unable to create directory structure for '"
+            << p.stem () << "': " << ec.message () << endl;
+
+          return 1;
+        }
+      }
+
+      // With the workspace directory in place, set up the associated database.
+      //
+      database db (p.stem () / ".lysis" / "lysis.db");
     }
   }
 
