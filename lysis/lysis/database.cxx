@@ -36,4 +36,20 @@ namespace lysis
 
     t.commit ();
   }
+
+  vector<workspace> database::
+  list_workspaces ()
+  {
+    vector<workspace> result;
+    transaction t (db_->begin ());
+
+    using query = odb::query<workspace>;
+    odb::result<workspace> r (db_->query<workspace> ());
+
+    for (const auto& w : r)
+      result.push_back (w);
+
+    t.commit ();
+    return result;
+  }
 }

@@ -5,6 +5,8 @@
 #include <lysis/lysis-options.hxx>
 #include <lysis/version.hxx>
 
+#include <odb/transaction.hxx>
+
 using namespace std;
 using namespace std::filesystem;
 using namespace lysis;
@@ -41,7 +43,23 @@ main (int argc, char* argv[])
     //
     if (ops.list_workspaces ())
     {
+      auto& o (cout);
+      auto& e (cerr);
 
+      auto ws (ldb.list_workspaces ());
+
+      if (ws.empty ())
+      {
+        e << "error: no workspaces found" << endl
+          << "info: try 'lysis --help' for more information" << endl;
+
+        return 1;
+      }
+
+      for (const auto& w: ws)
+        o << "workspace id: " << w.id () << endl;
+
+      return 0;
     }
 
     // Handle --version.

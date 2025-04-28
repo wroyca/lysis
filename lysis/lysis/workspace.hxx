@@ -13,6 +13,12 @@ namespace lysis
   public:
     workspace () = default;
 
+    const std::uint64_t&
+    id () const
+    {
+      return id_;
+    }
+
   private:
     friend class odb::access;
 
