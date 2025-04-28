@@ -477,6 +477,9 @@ namespace lysis
     build2_metadata_specified () const;
 
     const bool&
+    list_workspaces () const;
+
+    const bool&
     help () const;
 
     const bool&
@@ -503,6 +506,7 @@ namespace lysis
     public:
     std::uint64_t build2_metadata_;
     bool build2_metadata_specified_;
+    bool list_workspaces_;
     bool help_;
     bool version_;
   };

@@ -10,9 +10,10 @@ namespace lysis
   #pragma db object
   class workspace
   {
-  private:
+  public:
     workspace () = default;
 
+  private:
     friend class odb::access;
 
     #pragma db id auto

@@ -137,7 +137,7 @@ if $develop
   d = $directory($h)
   p = $string($leaf($d, $out_root))
 
-  options = --std c++11 --database sqlite -I $src_root              \
+  options = --std c++17 --database sqlite -I $src_root              \
             --include-with-brackets --include-prefix $p             \
             --guard-prefix $regex.replace($ucase($p), '[/\\]', '_') \
             --generate-schema --generate-query                      \

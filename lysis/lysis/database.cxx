@@ -1,4 +1,5 @@
 #include <lysis/database.hxx>
+#include <lysis/workspace-odb.hxx>
 
 #include <odb/schema-catalog.hxx>
 #include <odb/sqlite/database.hxx>
@@ -24,5 +25,15 @@ namespace lysis
       schema_catalog::create_schema (*db_);
       t.commit ();
     }
+  }
+
+  void database::
+  commit (workspace& ws)
+  {
+    transaction t (db_->begin ());
+
+    db_->persist (ws);
+
+    t.commit ();
   }
 }

@@ -12,7 +12,7 @@ using namespace lysis;
 int
 main (int argc, char* argv[])
 {
-  database db ("/tmp/lysis.db");
+  database ldb ("/tmp/lysis.db");
 
   try
   {
@@ -35,6 +35,13 @@ main (int argc, char* argv[])
         << "lysis.checksum = [string] '" << LYSIS_VERSION_FULL << '\'' << endl;
 
       return 0;
+    }
+
+    // Handle --list-workspaces.
+    //
+    if (ops.list_workspaces ())
+    {
+
     }
 
     // Handle --version.
@@ -126,7 +133,6 @@ main (int argc, char* argv[])
       // strictly required, keeping the workspace and binary names aligned is
       // generally a good idea.
       //
-      //
       catch (const filesystem_error&)
       {
         error_code ec;
@@ -144,9 +150,21 @@ main (int argc, char* argv[])
         }
       }
 
-      // With the workspace directory in place, set up the associated database.
+      // Create a new workspace object. The workspace ID is automatically assigned.
       //
-      database db (p.stem () / ".lysis" / "lysis.db");
+      workspace w;
+
+      // Initialize the workspace database.
+      //
+      database wdb (p.stem () / ".lysis" / "lysis.db");
+
+      // Insert the workspace object into the workspace database.
+      //
+      wdb.commit (w);
+
+      // Insert the workspace object into the logical database.
+      //
+      ldb.commit (w);
     }
   }
 

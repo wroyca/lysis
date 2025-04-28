@@ -17,6 +17,11 @@ namespace lysis
 
     std::uint64_t --build2-metadata; // leave undocumented/hidden
 
+    bool --list-workspaces
+    {
+      "List all registered workspaces."
+    };
+
     bool --help
     {
       "Print usage information and exit."

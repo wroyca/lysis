@@ -294,6 +294,12 @@ namespace lysis
   }
 
   inline const bool& lysis_options::
+  list_workspaces () const
+  {
+    return this->list_workspaces_;
+  }
+
+  inline const bool& lysis_options::
   help () const
   {
     return this->help_;

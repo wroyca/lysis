@@ -763,6 +763,7 @@ namespace lysis
   lysis_options ()
   : build2_metadata_ (),
     build2_metadata_specified_ (false),
+    list_workspaces_ (),
     help_ (),
     version_ ()
   {
@@ -776,6 +777,7 @@ namespace lysis
                  ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
     build2_metadata_specified_ (false),
+    list_workspaces_ (),
     help_ (),
     version_ ()
   {
@@ -792,6 +794,7 @@ namespace lysis
                  ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
     build2_metadata_specified_ (false),
+    list_workspaces_ (),
     help_ (),
     version_ ()
   {
@@ -808,6 +811,7 @@ namespace lysis
                  ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
     build2_metadata_specified_ (false),
+    list_workspaces_ (),
     help_ (),
     version_ ()
   {
@@ -826,6 +830,7 @@ namespace lysis
                  ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
     build2_metadata_specified_ (false),
+    list_workspaces_ (),
     help_ (),
     version_ ()
   {
@@ -840,6 +845,7 @@ namespace lysis
                  ::lysis::cli::unknown_mode arg)
   : build2_metadata_ (),
     build2_metadata_specified_ (false),
+    list_workspaces_ (),
     help_ (),
     version_ ()
   {
@@ -857,9 +863,11 @@ namespace lysis
     os << "OPTIONS" << ::std::endl;
 
     os << std::endl
-       << "--help    Print usage information and exit." << ::std::endl;
+       << "--list-workspaces List all registered workspaces." << ::std::endl;
 
-    os << "--version Print version and exit." << ::std::endl;
+    os << "--help            Print usage information and exit." << ::std::endl;
+
+    os << "--version         Print version and exit." << ::std::endl;
 
     p = ::lysis::cli::usage_para::option;
 
@@ -879,6 +887,8 @@ namespace lysis
       _cli_lysis_options_map_["--build2-metadata"] =
       &::lysis::cli::thunk< lysis_options, std::uint64_t, &lysis_options::build2_metadata_,
         &lysis_options::build2_metadata_specified_ >;
+      _cli_lysis_options_map_["--list-workspaces"] =
+      &::lysis::cli::thunk< lysis_options, &lysis_options::list_workspaces_ >;
       _cli_lysis_options_map_["--help"] =
       &::lysis::cli::thunk< lysis_options, &lysis_options::help_ >;
       _cli_lysis_options_map_["--version"] =
