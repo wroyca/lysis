@@ -289,9 +289,14 @@ h6 {
   font-size: var(--font-size-base);
 }
 
+#preface {
+  margin-top: var(--spacing-4);
+}
+
 p {
   margin-top: 0;
   margin-bottom: var(--spacing-4);
+  line-height: var(--line-height-relaxed);
 }
 
 a {
@@ -345,8 +350,13 @@ li + li {
   margin-top: var(--spacing-2);
 }
 
+li > pre {
+  margin: var(--spacing-4) 0;
+  padding: var(--spacing-4);
+}
+
 /* Notes and Callouts */
-.note, .callout {
+.note, span.note, .callout {
   position: relative;
   margin-bottom: var(--spacing-4);
   padding: var(--spacing-4);
@@ -355,17 +365,31 @@ li + li {
   background-color: var(--color-primary-50);
 }
 
-.note {
+.note, span.note {
   border-color: var(--color-info);
   background-color: var(--color-info-light);
 }
 
-.note::before {
+span.note {
+  margin-top: var(--spacing-4);
+}
+
+.note::before, span.note::before {
   content: "Note";
   display: block;
   font-weight: 600;
   color: var(--color-info);
   margin-bottom: var(--spacing-2);
+}
+
+.note code, span.note code, .note pre, span.note pre {
+  background-color: oklab(0 0 0 / 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  .note code, span.note code, .note pre, span.note pre {
+    background-color: oklab(1 0 0 / 0.06);
+  }
 }
 
 .callout.warning {
@@ -394,28 +418,38 @@ li + li {
   margin-bottom: var(--spacing-2);
 }
 
+/* Table of Contents */
+table.toc * th {
+  font-weight: 600;
+}
+
+table.toc * td, table.toc * th {
+  vertical-align: top;
+}
+
 /* Tables */
-table {
+table:not(.toc) {
   width: 100%;
   margin-bottom: var(--spacing-4);
   border-collapse: collapse;
 }
 
-th {
+table:not(.toc) th {
   padding: var(--spacing-2) var(--spacing-3);
   text-align: left;
   border-bottom: 2px solid var(--color-border-medium);
   font-weight: 600;
 }
 
-td {
+table:not(.toc) td {
   padding: var(--spacing-2) var(--spacing-3);
   border-bottom: 1px solid var(--color-border-light);
 }
 
-tr:last-child td {
+table:not(.toc) tr:last-child td {
   border-bottom: none;
 }
+
 
 /* Buttons */
 .button {
@@ -474,7 +508,7 @@ tr:last-child td {
 /* Man Page Specific Styles */
 /* FIXME: These classes cannot be injected via CLI, so default HTML styles must be reassigned manually. */
 main {
-  max-width: var(--container-man);
+  max-width: var(--container-md);
   margin: 2rem auto;
   padding: 2rem;
   text-align: justify;
