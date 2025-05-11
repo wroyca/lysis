@@ -14,7 +14,7 @@ using namespace lysis;
 int
 main (int argc, char* argv[])
 {
-  database ldb ("/tmp/lysis.db");
+  database ldb (temp_directory_path () / "lysis.db");
 
   try
   {
