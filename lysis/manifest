@@ -1,5 +1,7 @@
 : 1
 name: lysis
+tests: lysis-tests
+examples: lysis-examples
 version: 0.1.0-a.0.z
 language: c++
 summary: lysis C++ executable
@@ -7,14 +9,10 @@ license: GPL-3.0-or-later ; GNU General Public License v3.0 or later.
 description-file: README.md
 url: https://github.com/wroyca/lysis
 email: wroy@proton.me
-#build-error-email: wroy@proton.me
+# build-error-email: wroy@proton.me
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0
 depends: * cli >= 1.2.0 ? ($config.lysis.develop)
-depends: * odb ^2.5.0- ? ($config.lysis.develop)
+depends: * odb >= 2.5.0 ? ($config.lysis.develop)
 depends: libodb >= 2.5.0
 depends: libodb-sqlite >= 2.5.0
-#depends: libhello ^1.0.0
-requires: host
-tests: * lysis-tests == $
-examples: * lysis-examples == $
