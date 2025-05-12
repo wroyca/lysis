@@ -1,5 +1,4 @@
 libs =
-#import libs += libhello%lib{hello}
 
 exe{lysis-examples}: {hxx ixx txx cxx}{**} $libs testscript
 

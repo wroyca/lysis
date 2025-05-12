@@ -1,6 +1,6 @@
 # Uncomment to suppress warnings coming from external libraries.
 #
-#cxx.internal.scope = current
+# cxx.internal.scope = current
 
 cxx.std = latest
 
@@ -11,15 +11,6 @@ ixx{*}: extension = ixx
 txx{*}: extension = txx
 cxx{*}: extension = cxx
 
-if ($build.mode != 'skeleton')
-{
-  import! [metadata] lysis = lysis%exe{lysis}
-
-  # Every exe{} in this project is by default a test.
-  #
-  exe{*}: test = true
-
-  # The test target for cross-testing (running tests under Wine, etc).
-  #
-  test.target = $cxx.target
-}
+# The test target for cross-testing (running tests under Wine, etc).
+#
+test.target = $cxx.target
