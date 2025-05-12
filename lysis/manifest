@@ -72,15 +72,15 @@ bpkg.create:config.cc.coptions=[null]
 bpkg.create:config.cc.loptions=[null]
 \
 
-bindist-fedora-builds: bindist
-bindist-fedora-build-include: linux_fedora*-**
-bindist-fedora-build-exclude: **
-bindist-fedora-build-config:
+bindist-fedora-archive-builds: bindist
+bindist-fedora-archive-build-include: linux_fedora*-**
+bindist-fedora-archive-build-exclude: **
+bindist-fedora-archive-build-config:
 \
-+bpkg.bindist.fedora:
++bpkg.bindist.archive:
 +bbot.bindist.upload:
 
-bpkg.bindist.fedora:--recursive=auto
+bpkg.bindist.archive:--recursive=auto
 bpkg.bindist.fedora:--fedora-buildflags=prepend
 
 bpkg.create:config.bin.lib=static

@@ -1,0 +1,141 @@
+# .github/workflows/pre-release-snapshot.yml
+
+name: snapshot
+run-name: snapshot release from build2 CI bindist
+
+on:
+  check_suite:
+    types: [completed]
+
+permissions:
+  contents: write  # required to create GitHub releases
+
+env:
+  base_ci_url: https://ci.stage.build2.org/0/bindist
+  package: lysis
+  platforms: |
+    debian/debian11
+    debian/debian12
+    fedora/fedora40
+    fedora/fedora41
+    archive/debian11
+    archive/debian12
+    archive/fedora40
+    archive/fedora41
+    archive/macos13.4
+    archive/windows10
+
+jobs:
+  pre-release:
+    name: snapshot builder
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: detect latest build id and version
+        id: detect
+        run: |
+          package_ci_url="${base_ci_url}/"
+          test_platform="debian/debian12"
+
+          echo "::group::fetching build ids"
+          build_ids=$(curl -fsSL "$package_ci_url" | grep -oP 'href="\K([a-f0-9-]{36})(?=/)' | head -n 10)
+          echo "$build_ids"
+          echo "::endgroup::"
+
+          build_id=""
+          for id in $build_ids; do
+            if curl --head --silent --fail "${base_ci_url}/${id}/${test_platform}/${package}/"; then
+              build_id="$id"
+              break
+            fi
+          done
+
+          if [[ -z "$build_id" ]]; then
+            echo "error: no valid build found for package '$package'"
+            exit 1
+          fi
+
+          version=""
+          IFS=$'\n' read -rd '' -a platform_list <<<"$platforms"
+          for platform in "${platform_list[@]}"; do
+            version_url="${base_ci_url}/${build_id}/${platform}/${package}/${package}/"
+            version=$(curl -fsSL "$version_url" | grep -oP 'href="\K[^"/?]+(?=/)' | grep -v '^Parent$' | head -n1)
+            if [[ -n "$version" ]]; then
+              break
+            fi
+          done
+
+          if [[ -z "$version" ]]; then
+            echo "error: no version directory found for any platform"
+            exit 1
+          fi
+
+          echo "build_id=${build_id}" >> "$GITHUB_ENV"
+          echo "version=${version}" >> "$GITHUB_ENV"
+          echo "build_id=${build_id}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: resolve available artifact urls
+        id: urls
+        run: |
+          IFS=$'\n' read -rd '' -a platform_list <<<"$platforms"
+          artifact_urls=()
+
+          for platform in "${platform_list[@]}"; do
+            url="${base_ci_url}/${build_id}/${platform}/${package}/${package}/${version}/"
+            if curl --head --silent --fail "$url"; then
+              echo "found: $url"
+              artifact_urls+=("$url")
+            fi
+          done
+
+          if [[ ${#artifact_urls[@]} -eq 0 ]]; then
+            echo "error: no valid artifact urls found"
+            exit 1
+          fi
+
+          echo "::group::resolved artifact urls"
+          printf '%s\n' "${artifact_urls[@]}"
+          echo "::endgroup::"
+
+          printf "artifact_urls<<EOF\n%s\nEOF\n" "${artifact_urls[*]}" >> "$GITHUB_ENV"
+          printf "artifact_urls<<EOF\n%s\nEOF\n" "${artifact_urls[*]}" >> "$GITHUB_OUTPUT"
+
+      - name: download artifacts
+        run: |
+          mkdir -p release_binaries
+          IFS=' ' read -r -a urls <<<"$artifact_urls"
+
+          for base_url in "${urls[@]}"; do
+            echo "::group::processing $base_url"
+            arch_dirs=$(curl -fsSL "$base_url" | grep -oP 'href="\K[^"/]+(?=/)' | grep -v 'Parent')
+
+            for arch in $arch_dirs; do
+              arch_url="${base_url}${arch}/"
+              files=$(curl -fsSL "$arch_url" | grep -oP 'href="\K[^"]+' | grep -vE 'packages.sha256|Parent|\?C=')
+
+              for file in $files; do
+                filename=$(basename "$file")
+                full_url="${arch_url}${file}"
+                dest="release_binaries/${filename}"
+
+                echo "downloading $filename from $full_url"
+                curl -Lf --retry 3 --retry-delay 3 -o "$dest" "$full_url" || echo "warning: failed to download $filename"
+              done
+            done
+            echo "::endgroup::"
+          done
+
+          if [ -z "$(ls -A release_binaries)" ]; then
+            echo "error: no binaries downloaded"
+            exit 1
+          fi
+
+      - name: publish github pre-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "snapshot-$(date +%Y%m%d-%H%M%S)" release_binaries/* --prerelease
