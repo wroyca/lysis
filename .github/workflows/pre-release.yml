@@ -1,14 +1,11 @@
 name: Pre-Release Snapshot
 
 on:
-  workflow_run:
-    workflows: ["build2 stage CI"]
-    types:
-      - completed
+  check_suite:
+    types: [completed]
 
 jobs:
   release:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -16,21 +13,80 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Extract Build2 CI Build ID and Version
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          CI_API_URL="https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs"
-          CI_LOG=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" "$CI_API_URL")
+          BASE_CI_URL="https://ci.stage.build2.org/0/bindist"
+          PACKAGE="lysis"
 
-          BUILD_ID=$(echo "$CI_LOG" | jq -r '.jobs[].name' | grep -oP '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' | head -n 1)
-          [[ -z "$BUILD_ID" ]] && { echo "Error: Unable to extract build identifier."; exit 1; }
+          PACKAGE_CI_URL="https://ci.stage.build2.org/0/bindist/"
+          CI_LIST=$(curl -s "$PACKAGE_CI_URL")
 
+          # Extract up to 10 most recent build IDs
+          BUILD_IDS=$(echo "$CI_LIST" | grep -oP 'href="([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/' | cut -d'"' -f2 | tr -d '/' | head -n 10)
+
+          VALID_BUILD_ID=""
+          for bid in $BUILD_IDS; do
+            echo "Checking build ID: $bid for package $PACKAGE"
+
+            # Check at least one platform for package
+            TEST_PLATFORM="debian/debian12"
+            if curl --output /dev/null --silent --head --fail "$BASE_CI_URL/$bid/$TEST_PLATFORM/$PACKAGE/"; then
+              echo "Found valid build with package $PACKAGE: $bid"
+              VALID_BUILD_ID=$bid
+              break
+            fi
+
+            echo "Build $bid does not contain package $PACKAGE, trying next..."
+          done
+
+          if [[ -z "$VALID_BUILD_ID" ]]; then
+            echo "Error: Unable to find any build containing the $PACKAGE package."
+            exit 1
+          fi
+
+          BUILD_ID=$VALID_BUILD_ID
+          echo "Selected build ID: $BUILD_ID"
           echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
 
-          VERSION=$(echo "$CI_LOG" | jq -r '.jobs[].steps[].name' | grep -oP '[0-9]+\.[0-9]+\.[0-9]+-[a-zA-Z0-9\.\-]+')
-          [[ -z "$VERSION" ]] && { echo "Error: Unable to extract version."; exit 1; }
+          PLATFORMS=(
+            "debian/debian11"
+            "debian/debian12"
+            "fedora/fedora40"
+            "fedora/fedora41"
+            "archive/debian11"
+            "archive/debian12"
+            "archive/fedora40"
+            "archive/fedora41"
+            "archive/macos13.4"
+            "archive/windows10"
+          )
 
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          for PLATFORM in "${PLATFORMS[@]}"; do
+            VERSIONS_URL="$BASE_CI_URL/$BUILD_ID/$PLATFORM/lysis/lysis/"
+            echo "Checking for versions at: $VERSIONS_URL"
+            VERSION_LIST=$(curl -s "$VERSIONS_URL")
+            curl_status=$?
+
+            if [ $curl_status -ne 0 ]; then
+              echo "Warning: Failed to fetch from $VERSIONS_URL (curl exit code: $curl_status)"
+            fi
+
+            if [ $? -eq 0 ]; then
+              VERSION=$(echo "$VERSION_LIST" | grep -oP 'href="([^"/?]+)/' | grep -v 'Parent' | head -n 1 | cut -d'"' -f2 | tr -d '/')
+              if [ -n "$VERSION" ]; then
+                echo "Found version: $VERSION for platform $PLATFORM"
+                echo "VERSION=$VERSION" >> $GITHUB_ENV
+                break
+              fi
+            fi
+          done
+
+          if [[ -z "$VERSION" ]]; then
+            echo "Error: Unable to extract version from any platform. Tried the following platforms:"
+            printf "  - %s\n" "${PLATFORMS[@]}"
+            exit 1
+          else
+            echo "Successfully found version $VERSION"
+          fi
 
       - name: Construct Artifact URLs
         run: |
@@ -42,6 +98,10 @@ jobs:
             "debian/debian12"
             "fedora/fedora40"
             "fedora/fedora41"
+            "archive/debian11"
+            "archive/debian12"
+            "archive/fedora40"
+            "archive/fedora41"
             "archive/macos13.4"
             "archive/windows10"
           )
@@ -49,8 +109,18 @@ jobs:
           ARTIFACT_URLS=()
           for PLATFORM in "${PLATFORMS[@]}"; do
             ARTIFACT_URL="$BASE_CI_URL/$BUILD_ID/$PLATFORM/$PACKAGE/$PACKAGE/$VERSION/"
-            ARTIFACT_URLS+=("$ARTIFACT_URL")
+            if curl --output /dev/null --silent --head --fail "$ARTIFACT_URL"; then
+              echo "Found artifacts at: $ARTIFACT_URL"
+              ARTIFACT_URLS+=("$ARTIFACT_URL")
+            else
+              echo "Warning: No artifacts found at $ARTIFACT_URL"
+            fi
           done
+
+          if [ ${#ARTIFACT_URLS[@]} -eq 0 ]; then
+            echo "Error: No valid artifact URLs found for version $VERSION"
+            exit 1
+          fi
 
           echo "ARTIFACT_URLS=${ARTIFACT_URLS[*]}" >> $GITHUB_ENV
 
@@ -59,16 +129,45 @@ jobs:
           mkdir -p release_binaries
           for url in $ARTIFACT_URLS; do
             echo "Fetching: $url"
-            FILE_LIST=$(curl -s "$url" | grep -oP 'href="[^"]+"' | cut -d '"' -f 2)
 
-            for file in $FILE_LIST; do
-              [[ "$file" == "packages.sha256" ]] && continue  # Skip hash file
-              FILENAME=$(basename "$file")
-              FULL_URL="$url$FILENAME"
-              echo "Downloading $FILENAME"
-              curl -L -o "release_binaries/$FILENAME" "$FULL_URL"
+            ARCH_DIRS=$(curl -s "$url" | grep -oP 'href="([^"?/]+/)"' | cut -d '"' -f 2 | grep -v "Parent" | grep -v "\\?C=")
+
+            echo "Found architecture directories: $ARCH_DIRS"
+
+            for arch_dir in $ARCH_DIRS; do
+              ARCH_URL="$url$arch_dir"
+              echo "Processing architecture directory: $ARCH_URL"
+
+              ARCH_FILES=$(curl -s "$ARCH_URL" | grep -oP 'href="[^"?]+"' | cut -d '"' -f 2 | grep -v "/$" | grep -v "Parent" | grep -v "\\?C=")
+
+              for file in $ARCH_FILES; do
+                if [[ "$file" == */ ]] || [[ "$file" == "packages.sha256" ]] || [[ "$file" == "?C="* ]]; then
+                  continue
+                fi
+
+                if [[ "$file" == /* ]]; then
+                  FULL_URL="https://ci.stage.build2.org$file"
+                  FILENAME=$(basename "$file")
+                else
+                  FILENAME=$(basename "$file")
+                  FULL_URL="${ARCH_URL}${file}"
+                fi
+
+                echo "Downloading $FILENAME from $FULL_URL"
+
+                if ! curl -L --fail -o "release_binaries/$FILENAME" "$FULL_URL"; then
+                  echo "Warning: Failed to download $FILENAME from $FULL_URL"
+                else
+                  echo "Successfully downloaded $FILENAME"
+                fi
+              done
             done
           done
+
+          if [ ! "$(ls -A release_binaries)" ]; then
+            echo "Error: No files were downloaded successfully"
+            exit 1
+          fi
 
       - name: Create GitHub Pre-Release
         env:
