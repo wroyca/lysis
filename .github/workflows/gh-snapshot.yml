@@ -76,6 +76,8 @@ jobs:
   snapshot-release:
     name: create snapshot release
     runs-on: ubuntu-latest
+    # Only run this job when workflow is triggered on the main branch
+    if: github.ref == 'refs/heads/main'
 
     steps:
       # Checkout the repository to access workflow files and scripts.
