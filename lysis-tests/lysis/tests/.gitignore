@@ -1,0 +1,5 @@
+lysis-tests
+
+# Testscript output directory (can be symlink).
+#
+test-lysis-tests

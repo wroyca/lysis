@@ -1,0 +1,119 @@
+: 1
+name: lysis
+tests: lysis-tests
+examples: lysis-examples
+benchmarks: lysis-benchmarks
+version: 0.1.0-a.0.z
+language: c++
+summary: lysis C++ executable
+license: GPL-3.0-or-later ; GNU General Public License v3.0 or later.
+description-file: README.md
+url: https://github.com/wroyca/lysis
+email: wroy@proton.me
+# build-error-email: wroy@proton.me
+depends: * build2 >= 0.17.0
+depends: * bpkg >= 0.17.0
+depends: * cli >= 1.2.0 ? ($config.lysis.develop)
+
+# Binary distributions packages.
+#
+# bindist-debian-builds: bindist
+# bindist-debian-build-include: linux_debian*-**
+# bindist-debian-build-exclude: **
+# bindist-debian-build-config:
+# \
+# +bpkg.bindist.debian:
+# +bbot.bindist.upload:
+#
+# bpkg.bindist.debian:--recursive=auto
+# bpkg.bindist.debian:--debian-buildflags=prepend
+#
+# bpkg.create:config.bin.lib=static
+# bpkg.create:config.cc.poptions=[null]
+# bpkg.create:config.cc.coptions=[null]
+# bpkg.create:config.cc.loptions=[null]
+# \
+
+# bindist-fedora-builds: bindist
+# bindist-fedora-build-include: linux_fedora*-**
+# bindist-fedora-build-exclude: **
+# bindist-fedora-build-config:
+# \
+# +bpkg.bindist.fedora:
+# +bbot.bindist.upload:
+#
+# bpkg.bindist.fedora:--recursive=auto
+# bpkg.bindist.fedora:--fedora-buildflags=prepend
+#
+# bpkg.create:config.bin.lib=static
+# bpkg.create:config.cc.poptions=[null]
+# bpkg.create:config.cc.coptions=[null]
+# bpkg.create:config.cc.loptions=[null]
+# \
+
+# Binary distributions archives.
+#
+# bindist-debian-archive-builds: bindist
+# bindist-debian-archive-build-include: linux_debian*-**
+# bindist-debian-archive-build-exclude: **
+# bindist-debian-archive-build-config:
+# \
+# +bpkg.bindist.archive:
+# +bbot.bindist.upload:
+#
+# bpkg.bindist.archive:--recursive=auto
+# bpkg.bindist.debian:--debian-buildflags=prepend
+#
+# bpkg.create:config.bin.lib=static
+# bpkg.create:config.cc.poptions=[null]
+# bpkg.create:config.cc.coptions=[null]
+# bpkg.create:config.cc.loptions=[null]
+# \
+
+# bindist-fedora-archive-builds: bindist
+# bindist-fedora-archive-build-include: linux_fedora*-**
+# bindist-fedora-archive-build-exclude: **
+# bindist-fedora-archive-build-config:
+# \
+# +bpkg.bindist.archive:
+# +bbot.bindist.upload:
+#
+# bpkg.bindist.archive:--recursive=auto
+# bpkg.bindist.fedora:--fedora-buildflags=prepend
+#
+# bpkg.create:config.bin.lib=static
+# bpkg.create:config.cc.poptions=[null]
+# bpkg.create:config.cc.coptions=[null]
+# bpkg.create:config.cc.loptions=[null]
+# \
+
+# bindist-macos-builds: bindist
+# bindist-macos-build-include: macos*-**
+# bindist-macos-build-exclude: **
+# bindist-macos-build-config:
+# \
+# +bpkg.bindist.archive:
+# +bbot.bindist.upload:
+#
+# bpkg.bindist.archive:--recursive=auto
+#
+# bpkg.create:config.bin.lib=static
+#
+# b.create:config.cc.coptions="-Wall -O3"
+# \
+
+# bindist-windows-builds: bindist
+# bindist-windows-build-include: windows*-msvc**
+# bindist-windows-build-exclude: **
+# bindist-windows-build-config:
+# \
+# +bpkg.bindist.archive:
+# +bbot.bindist.upload:
+#
+# bpkg.bindist.archive:--recursive=auto
+#
+# bpkg.create:config.bin.lib=static
+# bpkg.create:config.cc.coptions+="/MT"
+#
+# b.create:config.cc.coptions="/W2 /O2"
+# \

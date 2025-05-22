@@ -1,0 +1,11 @@
+: cli
+: Test command-line interface conformance
+:
+{
+  : version
+  : Test version output for valid semantic
+  :
+  $* --version >>~"/EOO/"
+  /.*$(version.major)\.$(version.minor)\.$(version.patch).*/
+  EOO
+}
