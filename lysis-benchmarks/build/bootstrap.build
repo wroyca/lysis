@@ -1,0 +1,7 @@
+project = lysis-benchmarks
+
+using version
+using config
+using test
+using install
+using dist

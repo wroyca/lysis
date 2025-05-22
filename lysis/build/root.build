@@ -1,0 +1,41 @@
+using in
+
+define cli: file
+
+cli{*}: extension = cli
+
+# Uncomment to suppress warnings coming from external libraries.
+#
+# cxx.internal.scope = current
+
+cxx.std = latest
+
+using cxx
+
+hxx{*}: extension = hxx
+ixx{*}: extension = ixx
+txx{*}: extension = txx
+cxx{*}: extension = cxx
+
+# Microsoft Visual C++ (MSVC) defines a set of "secure" variants for many
+# standard C library functions (e.g., `strcpy_s` instead of `strcpy`) and
+# deprecates the standard versions via compiler warnings. Similarly, many
+# Standard C++ Library functions generate warnings under Microsoft's Secure
+# CRT and Safe STL extensions unless `_SCL_SECURE_NO_WARNINGS` is defined.
+#
+# These warnings are not emitted by other compilers and are not part of any
+# ISO C or C++ standard. In portable or standards-conforming codebases, these
+# are considered noise and can obscure real issues.
+#
+if ($cxx.target.system == 'win32-msvc')
+  cxx.poptions += -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS
+
+# The test target for cross-testing (running tests under Wine, etc).
+#
+test.target = $cxx.target
+
+# Pre-defined semantics to distinguish between development and consumption
+# builds.
+#
+config [bool] config.lysis.develop ?= false
+develop = $config.lysis.develop # shorthand
